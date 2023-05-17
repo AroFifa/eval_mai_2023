@@ -116,15 +116,10 @@ INSERT INTO Profil (id, profil_name, profil_level) VALUES
 (1, 'Manager', 2),
 (2, 'Salesperson', 1);
 -- Insert data into Employee table
-INSERT INTO Employee (id, profil_id, firstname, lastname, birthday, email, passwd) VALUES
-(1, 2, 'John', 'Doe', '1990-01-01', 'johndoe@example.com', crypt('password', gen_salt('bf'))),
-(2, 2, 'Jane', 'Doe', '1985-05-05', 'janedoe@example.com', crypt('password', gen_salt('bf'))),
-(3, 1, 'Admin', 'User', '1980-10-10', 'admin@example.com', crypt('password', gen_salt('bf')));
--- Insert data into Manager table
-INSERT INTO Manager (employee_id, store_id) VALUES
-(3, 1),
-(1, 2),
-(2, 3);
+INSERT INTO Employee (id, profil_id, firstname, lastname, birthday, email, passwd,store_id) VALUES
+(1, 2, 'John', 'Doe', '1990-01-01', 'johndoe@example.com', crypt('password', gen_salt('bf')),2),
+(2, 2, 'Jane', 'Doe', '1985-05-05', 'janedoe@example.com', crypt('password', gen_salt('bf')),3),
+(3, 1, 'Admin', 'User', '1980-10-10', 'admin@example.com', crypt('password', gen_salt('bf')),1);
 
 -- Insert data into Transaction_type table
 INSERT INTO Transaction_type (id, transaction_name, transaction_level) VALUES
