@@ -88,13 +88,8 @@ CREATE TABLE Employee (
   lastname varchar,
   birthday  date not null, /*  CHECK (date_naissance < CURRENT_DATE - INTERVAL '18 years'), */
   email varchar unique not null,
-  passwd varchar not null
-);
-
-CREATE TABLE Manager (
-  employee_id integer REFERENCES Employee(id),
-  store_id integer REFERENCES Store(id) not null,
-  PRIMARY KEY (employee_id)
+  passwd varchar not null,
+  store_id integer REFERENCES Store(id)
 );
 
 CREATE TABLE Purchase (
@@ -103,7 +98,7 @@ CREATE TABLE Purchase (
   qtt  positive_int not null check(qtt>0) default 1,
   purchase_price decimal_scale not null,
   purchase_date date not null default CURRENT_DATE,
-  manager_id integer REFERENCES Manager(employee_id) not null
+  employee_id integer REFERENCES Employee(id) not null
 );
 
 
@@ -119,14 +114,13 @@ CREATE TABLE Stock (
   store_id integer REFERENCES Store(id) not null,
   laptop_id integer REFERENCES LapTop(id) not null,
   qtt positive_int not null check(qtt>0) default 1,
-  status_id integer REFERENCES Stock_status(id) not null,
   transaction_id integer REFERENCES Transaction_type(id) not null
 );
 
 CREATE TABLE Transfer (
   id SERIAL PRIMARY KEY,
   transfer_date date not null default CURRENT_DATE,
-  manager_id integer REFERENCES Manager(employee_id) not null,
+  employee_id integer REFERENCES Employee(id) not null,
   store_to integer REFERENCES Store(id) not null,
   stock_id integer REFERENCES Stock(id) not null,
   qtt positive_int not null check(qtt>0) default 1
@@ -142,7 +136,7 @@ CREATE TABLE Reception (
   id SERIAL PRIMARY KEY,
   validation_date date not null default CURRENT_DATE,
   status_id integer REFERENCES Validation_status(id) not null,
-  manager_id integer REFERENCES Manager(employee_id) not null,
+  employee_id integer REFERENCES Employee(id) not null,
   qtt_received positive_int not null check(qtt_received>0)
 );
 

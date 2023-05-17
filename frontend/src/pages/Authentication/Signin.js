@@ -12,8 +12,31 @@ import MKButton from "components/MKButton";
 
 // Images
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
+import { useRef } from "react";
+import { signIn } from "routes/ws_call";
+import { useState } from "react";
+import MKAlert from "components/MKAlert";
 
-function Signin() {
+export default function Signin() {
+  const [error, setError] = useState("");
+
+  const email = useRef();
+  const passwd = useRef();
+
+  const signin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const data = await signIn(email.current.value, passwd.current.value);
+
+      sessionStorage.setItem("user", JSON.stringify(data));
+      if (data.store.category.category_level === 0) window.location.href = "/magasin";
+      else if (data.store.category.category_level === 10) window.location.href = "/salespoint";
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   return (
     <>
       <MKBox
@@ -50,23 +73,32 @@ function Signin() {
                 textAlign="center"
               >
                 <MKTypography variant="h4" fontWeight="medium" color="white" mt={1}>
-                  Sign in
+                  Authentification
                 </MKTypography>
               </MKBox>
               <MKBox pt={4} pb={3} px={3}>
-                <MKBox component="form" role="form">
-                  <MKBox mb={2}>
-                    <MKInput type="email" label="Email" fullWidth />
+                <form onSubmit={signin}>
+                  <MKBox>
+                    <MKBox mb={2}>
+                      <MKInput type="email" label="Email" inputRef={email} fullWidth />
+                    </MKBox>
+                    <MKBox mb={2}>
+                      <MKInput type="password" inputRef={passwd} label="Password" fullWidth />
+                    </MKBox>
+                    <MKBox mt={4} mb={1}>
+                      <MKButton
+                        type="submit"
+                        variant="gradient"
+                        onSubmit={signin}
+                        color="info"
+                        fullWidth
+                      >
+                        se connecter
+                      </MKButton>
+                    </MKBox>
+                    <MKBox mb={2}>{error ? <MKAlert color="error">{error}</MKAlert> : <></>}</MKBox>
                   </MKBox>
-                  <MKBox mb={2}>
-                    <MKInput type="password" label="Password" fullWidth />
-                  </MKBox>
-                  <MKBox mt={4} mb={1}>
-                    <MKButton variant="gradient" color="info" fullWidth>
-                      sign in
-                    </MKButton>
-                  </MKBox>
-                </MKBox>
+                </form>
               </MKBox>
             </Card>
           </Grid>
@@ -78,5 +110,3 @@ function Signin() {
     </>
   );
 }
-
-export default Signin;

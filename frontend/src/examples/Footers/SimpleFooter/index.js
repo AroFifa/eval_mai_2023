@@ -66,7 +66,7 @@ function SimpleFooter({ company, links, light }) {
           color={light ? "white" : "text"}
           fontSize={size.sm}
         >
-          &copy; {new Date().getFullYear()}, made with
+          &copy; {new Date().getFullYear()}, copyright
           <MKBox fontSize={size.md} color={light ? "white" : "text"} mb={-0.5} mx={0.25}>
             <Icon color="inherit" fontSize="inherit">
               favorite
@@ -78,7 +78,7 @@ function SimpleFooter({ company, links, light }) {
               &nbsp;{name}&nbsp;
             </MKTypography>
           </Link>
-          for a better web.
+          .
         </MKBox>
         <MKBox
           component="ul"
@@ -108,7 +108,7 @@ function SimpleFooter({ company, links, light }) {
 SimpleFooter.defaultProps = {
   company: { name: "MIKOLO" },
   links: [
-    { href: "https://www.creative-tim.com/presentation", name: "About Us" },
+    { href: "https://www.creative-tim.com/presentation", name: "A propos" },
     { href: "https://www.creative-tim.com/blog", name: "Blog" },
     { href: "https://www.creative-tim.com/license", name: "License" },
   ],

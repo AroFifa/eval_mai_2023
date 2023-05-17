@@ -16,7 +16,7 @@ Coded by www.creative-tim.com
 import { useEffect } from "react";
 
 // react-router components
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 // @mui material components
 import { ThemeProvider } from "@mui/material/styles";
@@ -29,8 +29,11 @@ import Presentation from "layouts/pages/presentation";
 // Material Kit 2 React routes
 import routes from "routes";
 import routesR from "routes/routes";
-import Template from "own/Template";
-import SignIn from "pages/Authentication/Signin";
+import magasin_routes from "routes/magasin";
+import Signin from "pages/Authentication/Signin";
+import HomeMagasin from "pages/Magasin/Home";
+import HomeVente from "pages/PointVentes/Home";
+import point_ventes_routes from "routes/point_ventes";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -60,10 +63,14 @@ export default function App() {
       <Routes>
         {getRoutes(routes)}
         {getRoutes(routesR)}
+        {getRoutes(magasin_routes)}
+        {getRoutes(point_ventes_routes)}
+        <Route path="/signin" element={<Signin />} />
+        <Route path="/magasin" element={<HomeMagasin />} />
+        <Route path="/salespoint" element={<HomeVente />} />
+        <Route path="/" element={<Navigate to="/signin" />} />
+
         <Route path="/presentation" element={<Presentation />} />
-        {/* <Route path="*" element= to="/presentation" />} /> */}
-        <Route path="/" element={<Template />} />
-        <Route path="/signin" element={<SignIn />} />
       </Routes>
     </ThemeProvider>
   );
