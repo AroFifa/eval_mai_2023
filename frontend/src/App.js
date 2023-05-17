@@ -30,6 +30,7 @@ import Presentation from "layouts/pages/presentation";
 import routes from "routes";
 import routesR from "routes/routes";
 import Template from "own/Template";
+import SignIn from "pages/Authentication/Signin";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -62,6 +63,7 @@ export default function App() {
         <Route path="/presentation" element={<Presentation />} />
         {/* <Route path="*" element= to="/presentation" />} /> */}
         <Route path="/" element={<Template />} />
+        <Route path="/signin" element={<SignIn />} />
       </Routes>
     </ThemeProvider>
   );
