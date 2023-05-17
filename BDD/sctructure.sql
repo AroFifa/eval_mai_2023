@@ -106,11 +106,6 @@ CREATE TABLE Purchase (
   manager_id integer REFERENCES Manager(employee_id) not null
 );
 
-CREATE TABLE Stock_status (
-  id SERIAL PRIMARY KEY,
-  status_name varchar unique not null,
-  status_value smallint unique not null
-);
 
 CREATE TABLE Transaction_type (
   id SERIAL PRIMARY KEY,
