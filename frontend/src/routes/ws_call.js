@@ -168,6 +168,18 @@ export const getBrands = async () => {
   return data.data.content;
 };
 
+export const getLocations = async () => {
+  const response = await responseInit("http://localhost:8080/locations", "GET", null);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
 export const getModelsByBrand = async (brand_id) => {
   var dataToSend = JSON.stringify({
     brand: { id: brand_id ? brand_id : -5 },
@@ -225,6 +237,28 @@ export const saveLaptop = async (model_id) => {
 
   if (response.status === 500) {
     throw new Error("Modèle déja existant");
+  }
+
+  return data.data.content;
+};
+
+export const saveSalespoint = async (location_id, name) => {
+  var dataToSend = JSON.stringify({
+    location: { id: location_id },
+    store_name: name,
+    category: { id: 2 },
+  });
+
+  const response = await responseInit("http://localhost:8080/stores", "POST", null, dataToSend);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("Veuiller choisir un autre nom");
   }
 
   return data.data.content;
@@ -344,4 +378,113 @@ export const purchaseLaptop = async (date, laptop_id, qtt, prix) => {
   }
 
   return data.data.content;
+};
+
+export const purchaseLaptops = async (date, purchaseItems) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  var dataToSend = JSON.stringify({
+    date: date,
+    items: purchaseItems,
+    employee: user,
+  });
+
+  const response = await responseInit(
+    "http://localhost:8080/laptops/purchases",
+    "POST",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data;
+};
+
+export const searchStocks = async (q) => {
+  const response = await responseInit(
+    `http://localhost:8080/stockstatus/mainsearch?q=${q ? q : ""}`,
+    "GET",
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const sendLaptops = async (date, store_id, transferItems) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  var dataToSend = JSON.stringify({
+    date: date,
+    items: transferItems,
+    employee: user,
+    store: { id: store_id },
+    isTransfer: true,
+  });
+
+  const response = await responseInit(
+    "http://localhost:8080/stockstatus/transfer",
+    "POST",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data;
+};
+
+export const searchSalespoint = async (q) => {
+  const response = await responseInit(
+    `http://localhost:8080/stores/searchsalespoint?q=${q ? q : ""}`,
+    "GET",
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const updateSalespoint = async (id, location_id, name) => {
+  var dataToSend = JSON.stringify({
+    location: { id: location_id },
+    store_name: name,
+    category: { id: 2 },
+  });
+
+  const response = await responseInit(
+    `http://localhost:8080/stores/${id}`,
+    "PUT",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("Modèle déja existant");
+  }
+
+  return data.data;
 };

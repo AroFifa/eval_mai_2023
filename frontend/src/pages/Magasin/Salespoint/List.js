@@ -1,4 +1,5 @@
-import { Grid } from "@mui/material";
+import { Edit } from "@mui/icons-material";
+import { Grid, IconButton } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import MKBox from "components/MKBox";
 import MKInput from "components/MKInput";
@@ -6,17 +7,20 @@ import MKTypography from "components/MKTypography";
 import SimpleFooter from "examples/Footers/SimpleFooter";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import magasin_routes from "routes/magasin";
-import { searchLaptop } from "routes/ws_call";
+import { searchSalespoint } from "routes/ws_call";
 
-export default function Achat() {
+export default function ListSalespoint() {
+  const navigate = useNavigate();
+
   const q = useRef();
 
-  const [laptops, setLaptops] = useState([]);
+  const [salespoint, setSalespoint] = useState([]);
   const fetchData = async () => {
     try {
-      const data = await searchLaptop(q.current.value);
-      setLaptops(data);
+      const data = await searchSalespoint(q.current.value);
+      setSalespoint(data);
     } catch (error) {
       console.error(error);
     }
@@ -27,9 +31,9 @@ export default function Achat() {
   }, []);
 
   function handleSearch() {
-    searchLaptop(q.current.value)
+    searchSalespoint(q.current.value)
       .then((data) => {
-        setLaptops(data);
+        setSalespoint(data);
       })
       .catch((error) => {
         // Handle any potential errors from the Promise
@@ -37,70 +41,39 @@ export default function Achat() {
       });
   }
 
-  // const handleClick = (
-  //   event,
-  //   params // GridRowParams
-  // ) => {
-  //   event.preventDefault();
-  //   const data = laptops.find((laptop) => laptop.id === params.row.id);
+  const handleClick = (
+    event,
+    params // GridRowParams
+  ) => {
+    event.preventDefault();
+    const data = salespoint.find((item) => item.id === params.row.id);
 
-  //   navigate(`/magasin/laptops/${params.row.id}`, {
-  //     state: data,
-  //   });
-  // };
-
-  const qttInput = (params) => {
-    console.log(params.row);
-    return <input type="number" />;
+    navigate(`/magasin/salespoint/${params.row.id}`, {
+      state: data,
+    });
   };
-  const columns = [
-    {
-      field: "Marque",
-      headerName: "Marque",
-      valueGetter: (params) => `${params.row.model.brand.brand_name || ""}`,
-    },
-    {
-      field: "Model",
-      headerName: "Référence",
-      width: 200,
-      valueGetter: (params) => `${params.row.model.model_name || ""}`,
-    },
-    {
-      field: "Cpu",
-      headerName: "CPU",
-      width: 150,
-      valueGetter: (params) => `${params.row.model.cpu.cpu_name || ""}`,
-    },
 
+  const columns = [
+    { field: "location", headerName: "Lieu", width: 300 },
+    { field: "store_name", headerName: "Point de vente", width: 300 },
     {
-      field: "Ram",
-      headerName: "Ram",
-      width: 150,
-      valueGetter: (params) =>
-        `${params.row.model.ram.ram_name + "," || ""} ${
-          params.row.model.ram.ram_value + " Go" || ""
-        }`,
-    },
-    {
-      field: "Disk",
-      headerName: "Disque",
-      width: 150,
-      valueGetter: (params) =>
-        `${params.row.model.disktype.type_name + "," || ""} ${
-          params.row.model.disk_size + " Go" || ""
-        }`,
-    },
-    {
-      field: "qtt",
-      headerName: "Qtt ",
-      renderCell: (params) => qttInput(params),
-    },
-    {
-      field: "montant",
-      headerName: "Prix d'achat",
-      renderCell: (params) => qttInput(params),
+      field: "Update Link",
+      headerName: "",
+      renderCell: (params) => (
+        // How can I send props to the component in the link, I wanna send the data where id = params.row.id so taht I don"t to call a WS
+
+        <IconButton onClick={(event) => handleClick(event, params)}>
+          <Edit />
+        </IconButton>
+      ),
     },
   ];
+
+  const rows = salespoint.map((item) => ({
+    id: item.id,
+    location: item.location.location_name,
+    store_name: item.store_name,
+  }));
 
   return (
     <>
@@ -108,7 +81,7 @@ export default function Achat() {
       <MKBox component="section" py={12} minHeight="75vh" marginTop="50px">
         <Grid container item justifyContent="center" xs={10} lg={7} mx="auto" textAlign="center">
           <MKTypography variant="h3" mb={1}>
-            Approvisionnement des ordinateurs
+            Point de ventes
           </MKTypography>
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
@@ -127,8 +100,7 @@ export default function Achat() {
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
           <DataGrid
-            checkboxSelection
-            rows={laptops}
+            rows={rows}
             columns={columns}
             initialState={{
               pagination: {

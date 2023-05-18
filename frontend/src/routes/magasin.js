@@ -1,19 +1,15 @@
-import { Laptop, Logout, Home as HomeIcon, Category, Store } from "@mui/icons-material";
+import { Laptop, Logout, Category, Store } from "@mui/icons-material";
 import Home from "../pages/Magasin/Home";
 import SignOut from "pages/Authentication/Signout";
 import SaveLaptop from "pages/Magasin/LapTop/Save";
 import ListLaptop from "pages/Magasin/LapTop/List";
 import EmployeeAffectation from "pages/Magasin/Salespoint/EmployeeAffectation";
-import Achat from "pages/Magasin/LapTop/Achat";
+import Purchase from "pages/Magasin/LapTop/Purchase";
+import Transfert from "pages/Magasin/LapTop/Transfert";
+import ListSalespoint from "pages/Magasin/Salespoint/List";
+import SaveSalespoint from "pages/Magasin/Salespoint/Save";
 
 const magasin_routes = [
-  {
-    name: "Home",
-    icon: <HomeIcon />,
-    route: "/magasin/home",
-    component: <Home />,
-    key: 1,
-  },
   {
     name: "Gestion de Laptop",
     icon: <Laptop />,
@@ -41,12 +37,7 @@ const magasin_routes = [
           {
             name: "Achat",
             route: "/magasin/laptops/purchase",
-            component: <Achat />,
-          },
-          {
-            name: "Prix de ventes",
-            route: "/magasin/laptops/price",
-            component: <Home />,
+            component: <Purchase />,
           },
         ],
       },
@@ -56,7 +47,7 @@ const magasin_routes = [
           {
             name: "Transfert",
             route: "/magasin/laptops/transfer",
-            component: <Home />,
+            component: <Transfert />,
           },
         ],
       },
@@ -181,12 +172,12 @@ const magasin_routes = [
           {
             name: "Enregistrement",
             route: "/magasin/stores/save",
-            component: <Home />,
+            component: <SaveSalespoint />,
           },
           {
             name: "Listes",
             route: "/magasin/stores/list",
-            component: <Home />,
+            component: <ListSalespoint />,
           },
         ],
       },

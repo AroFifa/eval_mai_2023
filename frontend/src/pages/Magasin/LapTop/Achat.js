@@ -61,6 +61,7 @@ function PurchaseLaptop() {
     ref: brandRef,
     onchange: onbrandchange,
 
+    InputLabelProps: { shrink: true },
     data: {
       data: brandData,
       label: "brand_name",
@@ -74,6 +75,7 @@ function PurchaseLaptop() {
     placeholder: "Référence",
     ref: laptopRef,
     required: true,
+    InputLabelProps: { shrink: true },
 
     fullWidth: true,
     data: {
@@ -104,6 +106,8 @@ function PurchaseLaptop() {
       });
   };
 
+  const today = new Date().toISOString().split("T")[0];
+
   return (
     <>
       <DefaultNavbar routes={magasin_routes} brand={"Magasin centrale"} sticky />
@@ -123,9 +127,10 @@ function PurchaseLaptop() {
                       variant="standard"
                       label="Date"
                       type="date"
-                      defaultValue={new Date()}
+                      defaultValue={today}
                       fullWidth
                       inputRef={dateRef}
+                      InputLabelProps={{ shrink: true }}
                       required
                     />
                   </Grid>
@@ -145,7 +150,8 @@ function PurchaseLaptop() {
                       label="Quantité"
                       type="number"
                       defaultValue={1}
-                      InputLabelProps={{ shrink: true, min: 1 }}
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ inputProps: { min: 1 } }}
                       fullWidth
                       inputRef={qttRef}
                       required
@@ -156,7 +162,8 @@ function PurchaseLaptop() {
                       type="number"
                       variant="standard"
                       label="Prix unitaire"
-                      InputLabelProps={{ shrink: true, step: "any", min: 0 }}
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ inputProps: { min: 0, step: "any" } }}
                       fullWidth
                       inputRef={prixRef}
                       required

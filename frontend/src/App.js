@@ -31,11 +31,12 @@ import routes from "routes";
 import routesR from "routes/routes";
 import magasin_routes from "routes/magasin";
 import Signin from "pages/Authentication/Signin";
-import HomeMagasin from "pages/Magasin/Home";
 import HomeVente from "pages/PointVentes/Home";
 import point_ventes_routes from "routes/point_ventes";
 import Template from "own/Template";
 import UpdateLaptop from "pages/Magasin/LapTop/Update";
+import UpdateSalespoint from "pages/Magasin/Salespoint/Update";
+import SaveLaptop from "pages/Magasin/LapTop/Save";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -68,13 +69,14 @@ export default function App() {
         {getRoutes(magasin_routes)}
         {getRoutes(point_ventes_routes)}
         <Route path="/signin" element={<Signin />} />
-        <Route path="/magasin" element={<HomeMagasin />} />
+        <Route path="/magasin" element={<SaveLaptop />} />
         <Route path="/salespoint" element={<HomeVente />} />
         <Route path="/" element={<Navigate to="/signin" />} />
 
         <Route path="/presentation" element={<Presentation />} />
         <Route path="/index" element={<Template />} />
         <Route path="/magasin/laptops/:id" element={<UpdateLaptop />} />
+        <Route path="/magasin/salespoint/:id" element={<UpdateSalespoint />} />
       </Routes>
     </ThemeProvider>
   );

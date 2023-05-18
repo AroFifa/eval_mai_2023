@@ -123,7 +123,7 @@ CREATE TABLE Transfer (
   employee_id integer REFERENCES Employee(id) not null,
   store_to integer REFERENCES Store(id) not null,
   store_from integer REFERENCES Store(id) not null,
-  stock_id integer REFERENCES Stock(id) not null,
+  laptop_id integer REFERENCES LapTop(id) not null,
   qtt positive_int not null check(qtt>0) default 1
 );
 
@@ -167,3 +167,32 @@ join Disktype d on m.disktype_id = d.id;
 
 -- CONSTRAINT
 ALTER TABLE laptop ADD CONSTRAINT model_uniquekey UNIQUE (model_id);
+
+-- VIEW 
+CREATE OR REPLACE VIEW V_etat_stock_in AS
+SELECT laptop_id , store_id , COALESCE(sum(qtt),0) qtt
+from stock 
+where transaction_id = 1
+ group by laptop_id,store_id;
+
+CREATE OR REPLACE VIEW V_etat_stock_out AS
+SELECT laptop_id , store_id , COALESCE(sum(qtt),0) qtt
+from stock 
+where transaction_id = 2
+ group by laptop_id,store_id;
+
+
+CREATE OR REPLACE VIEW V_etat_stock AS
+ SELECT
+    COALESCE(sin.laptop_id, sout.laptop_id) AS id,
+    COALESCE(sin.laptop_id, sout.laptop_id) AS laptop_id,
+    COALESCE(sin.store_id, sout.store_id) AS store_id,
+    COALESCE(sin.qtt, 0) - COALESCE(sout.qtt, 0) AS qtt
+FROM
+    V_etat_stock_in AS sin
+FULL JOIN
+    V_etat_stock_out AS sout ON sin.laptop_id = sout.laptop_id AND sin.store_id = sout.store_id;
+
+CREATE OR REPLACE VIEW V_etat_stock_search as 
+SELECT s.*, l.model_name,l.brand_id,l.brand_name,l.cpu_name,l.ram_name,l.type_name from V_etat_stock s join v_laptop_search l  
+on s.laptop_id =  l.id;
