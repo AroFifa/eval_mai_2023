@@ -1,6 +1,8 @@
 import { Laptop, Logout, Home as HomeIcon, Category, Store } from "@mui/icons-material";
 import Home from "../pages/Magasin/Home";
 import SignOut from "pages/Authentication/Signout";
+import SaveLaptop from "pages/Magasin/LapTop/Save";
+import ListLaptop from "pages/Magasin/LapTop/List";
 
 const magasin_routes = [
   {
@@ -22,12 +24,12 @@ const magasin_routes = [
           {
             name: "Enregistrement",
             route: "/magasin/laptops/save",
-            component: <Home />,
+            component: <SaveLaptop />,
           },
           {
             name: "Listes",
             route: "/magasin/laptops/list",
-            component: <Home />,
+            component: <ListLaptop />,
           },
         ],
       },

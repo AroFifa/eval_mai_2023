@@ -155,3 +155,97 @@ export const signOut = async () => {
 
   return data.message;
 };
+
+export const getBrands = async () => {
+  const response = await responseInit("http://localhost:8080/brands", "GET", null);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const getModelsByBrand = async (brand_id) => {
+  var dataToSend = JSON.stringify({
+    brand: { id: brand_id ? brand_id : -5 },
+  });
+
+  const response = await responseInit(
+    "http://localhost:8080/models/search",
+    "POST",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const saveLaptop = async (model_id) => {
+  var dataToSend = JSON.stringify({
+    model: { id: model_id },
+  });
+
+  const response = await responseInit("http://localhost:8080/laptops", "POST", null, dataToSend);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("Modèle déja existant");
+  }
+
+  return data.data.content;
+};
+
+export const updateLaptop = async (id, model_id) => {
+  var dataToSend = JSON.stringify({
+    model: { id: model_id },
+  });
+
+  const response = await responseInit(
+    `http://localhost:8080/laptops/${id}`,
+    "PUT",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("Modèle déja existant");
+  }
+
+  return data.data.content;
+};
+
+export const searchLaptop = async (q) => {
+  const response = await responseInit(
+    `http://localhost:8080/laptops/search?q=${q ? q : ""}`,
+    "GET",
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};

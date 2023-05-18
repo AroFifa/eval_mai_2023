@@ -34,6 +34,8 @@ import Signin from "pages/Authentication/Signin";
 import HomeMagasin from "pages/Magasin/Home";
 import HomeVente from "pages/PointVentes/Home";
 import point_ventes_routes from "routes/point_ventes";
+import Template from "own/Template";
+import UpdateLaptop from "pages/Magasin/LapTop/Update";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -71,6 +73,8 @@ export default function App() {
         <Route path="/" element={<Navigate to="/signin" />} />
 
         <Route path="/presentation" element={<Presentation />} />
+        <Route path="/index" element={<Template />} />
+        <Route path="/magasin/laptops/:id" element={<UpdateLaptop />} />
       </Routes>
     </ThemeProvider>
   );

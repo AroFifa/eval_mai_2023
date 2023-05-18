@@ -148,4 +148,24 @@ CREATE TABLE Sale (
   purchase_price decimal_scale,
   clientName varchar not null,
   store_id integer REFERENCES Store(id) not null
+<<<<<<< Updated upstream
 );
+=======
+);
+
+
+
+-- VIEW
+CREATE OR REPLACE VIEW V_laptop_search AS 
+SELECT l.*,m.model_name,m.brand_name,m.cpu_name,m.ram_name,m.type_name from Laptop l join v_model_tmp m on l.model_id = m.id;
+
+CREATE OR REPLACE VIEW V_model_tmp AS
+SELECT m.*,b.brand_name,cpu.cpu_name,r.ram_name,d.type_name from Model m
+join Brand b on m.brand_id = b.id 
+join Cpu on m.cpu_id = cpu.id
+join Ram r on m.ram_id = r.id
+join Disktype d on m.disktype_id = d.id;
+
+-- CONSTRAINT
+ALTER TABLE laptop ADD CONSTRAINT model_uniquekey UNIQUE (model_id);
+>>>>>>> Stashed changes

@@ -106,6 +106,6 @@ FormInput.propTypes = {
 
 FormInput.defaultProps = {
   variant: "standard",
-  fullWidth: false,
+  fullWidth: true,
 };
 export default FormInput;

@@ -18,7 +18,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import MKBox from "components/MKBox";
 import SimpleFooter from "examples/Footers/SimpleFooter";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
-// import FormGroupInput from "own/components/form/FormGroupInput";
+import FormGroupInput from "own/components/form/FormGroupInput";
 import { useRef, useState } from "react";
 import { NumericFormat } from "react-number-format";
 
@@ -30,7 +30,6 @@ import routes from "routes/routes";
 // import bgImage from "assets/images/bg-presentation.jpg";
 
 export default function Template() {
-  const value = useRef([]);
   const [error, setError] = useState(false);
   const [helper, setHelper] = useState("Please select your currency");
 
@@ -72,6 +71,8 @@ export default function Template() {
     },
   ];
 
+  const value = useRef({});
+
   function handleClick() {
     console.log(value.current.value);
 
@@ -83,7 +84,7 @@ export default function Template() {
   const element = {
     label: "label",
     placeholder: "placeholder",
-    // defaultValue: data[0],
+    defaultValue: data[0],
     type: "data",
     disabled: false,
     required: false,
@@ -109,7 +110,7 @@ export default function Template() {
       data: data,
       label: "label",
       value: "value",
-      multiple: true,
+      multiple: false,
       display: "search-select",
       // display: "simple: radio/select/searchselect multiple: select/checkboxes/searchselect",
       orientation: "vertical",
@@ -340,7 +341,7 @@ export default function Template() {
             },
           }}
         >
-          {/* <FormGroupInput gap={5} data={elements} orientation={"vertical"} /> */}
+          <FormGroupInput gap={5} data={elements} orientation={"vertical"} />
 
           <DataGrid
             rows={rows}

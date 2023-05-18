@@ -15,7 +15,7 @@ const FormSelectSearch = forwardRef(function FormSelectSearch(props, ref) {
 
   const change = onchange ? onchange : () => {};
 
-  const { datalabel = "label", datavalue = "value", multiple = false } = data || {};
+  const { label: datalabel = "label", value: datavalue = "value", multiple = false } = data || {};
   const handleChange = (event, value) => {
     if (Array.isArray(value)) {
       const selectedValues = value.map((item) => item[datavalue]);
@@ -35,9 +35,8 @@ const FormSelectSearch = forwardRef(function FormSelectSearch(props, ref) {
       <Autocomplete
         disablePortal
         multiple={multiple}
-        id="combo-box-demo"
         options={data.data}
-        sx={{ minWidth: "fit-content" }}
+        sx={{ minWidth: "fit-content", width: "350%" }}
         getOptionLabel={(option) => option[datalabel]}
         onChange={(event, value) => handleChange(event, value)}
         isOptionEqualToValue={(option, value) => option.value === value.value}
@@ -69,6 +68,6 @@ FormSelectSearch.propTypes = {
 };
 FormSelectSearch.defaultProps = {
   variant: "standard",
-  fullWidth: false,
+  fullWidth: true,
 };
 export default FormSelectSearch;

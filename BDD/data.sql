@@ -125,3 +125,16 @@ INSERT INTO Employee (id, profil_id, firstname, lastname, birthday, email, passw
 INSERT INTO Transaction_type (id, transaction_name, transaction_level) VALUES
 (1, 'Input', 10),
 (2, 'output', -10);
+
+
+INSERT INTO Model ( id,brand_id, model_name, screen_id, cpu_id, ram_id, disktype_id, disk_size) VALUES
+(default, 1, 'Dell Inspiron 15', 3, 2, 3, 2, 1000),
+(default, 2, 'HP Pavilion 14', 2, 3, 3, 2, 512),
+(default, 3, 'Lenovo Yoga C940', 2, 2, 6, 2, 1000),
+(default, 4, 'Asus ZenBook 14', 2, 3, 3, 2, 512),
+(default, 4, 'Asus ROG Strix G15', 4, 4, 4, 3, 1000),
+(default, 5, 'Acer Predator Helios 300', 4, 4, 6, 3, 1000),
+(default, 6, 'MacBook Pro', 1, 8, 8, 3, 512),
+(default, 7, 'Microsoft Surface Book 3', 4, 4, 8, 3, 1000),
+(default, 8, 'Samsung Galaxy Book Flex 2', 2, 3, 3, 3, 512),
+(default, 8, 'Samsung Galaxy Chromebook', 1, 8, 7, 2, 256);
