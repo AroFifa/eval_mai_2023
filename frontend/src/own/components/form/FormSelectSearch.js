@@ -1,4 +1,4 @@
-import { Autocomplete, FormControl, Popper, TextField } from "@mui/material";
+import { Autocomplete, FormControl, /* Popper, */ TextField } from "@mui/material";
 import { FormInputPropTypes } from "../propTypes/input";
 
 const { forwardRef } = require("react");
@@ -27,9 +27,9 @@ const FormSelectSearch = forwardRef(function FormSelectSearch(props, ref) {
     change();
   };
 
-  const PopperMy = function (props) {
-    return <Popper {...props} style={{ minWidth: "fit-content" }} />;
-  };
+  // const PopperMy = function (props) {
+  //   return <Popper {...props} style={{ minWidth: "fit-content" }} />;
+  // };
   return (
     <FormControl>
       <Autocomplete
@@ -41,7 +41,7 @@ const FormSelectSearch = forwardRef(function FormSelectSearch(props, ref) {
         onChange={(event, value) => handleChange(event, value)}
         isOptionEqualToValue={(option, value) => option.value === value.value}
         defaultValue={defaultValue}
-        PopperComponent={PopperMy}
+        // PopperComponent={PopperMy}
         renderInput={(params) => (
           <TextField
             multiline={multiline?.has}

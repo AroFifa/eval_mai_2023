@@ -3,6 +3,7 @@ import Home from "../pages/Magasin/Home";
 import SignOut from "pages/Authentication/Signout";
 import SaveLaptop from "pages/Magasin/LapTop/Save";
 import ListLaptop from "pages/Magasin/LapTop/List";
+import EmployeeAffectation from "pages/Magasin/Salespoint/EmployeeAffectation";
 
 const magasin_routes = [
   {
@@ -194,7 +195,7 @@ const magasin_routes = [
           {
             name: "Affectation",
             route: "/magasin/employees/affect",
-            component: <Home />,
+            component: <EmployeeAffectation />,
           },
         ],
       },
