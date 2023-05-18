@@ -249,3 +249,52 @@ export const searchLaptop = async (q) => {
 
   return data.data.content;
 };
+
+export const searchEmployees = async (q) => {
+  const response = await responseInit(
+    `http://localhost:8080/employees/search?q=${q ? q : ""}`,
+    "GET",
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const affectEmployee = async (id, store_id) => {
+  var dataToSend = JSON.stringify({
+    store: { id: store_id },
+  });
+
+  const response = await responseInit(
+    `http://localhost:8080/employees/${id}/affect`,
+    "PUT",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const getSalesPoint = async () => {
+  const response = await responseInit(`http://localhost:8080/stores/isSalesPoint`, "GET", null);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
