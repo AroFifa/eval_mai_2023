@@ -2,16 +2,19 @@ import MKBox from "components/MKBox";
 import SimpleFooter from "examples/Footers/SimpleFooter";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import magasin_routes from "routes/magasin";
 
 export default function Home() {
   const user = JSON.parse(sessionStorage.getItem("user"));
 
+  const navigate = useNavigate();
+
   const [isRedirecting, setIsRedirecting] = useState(false);
   useEffect(() => {
     if (user === null || user.store.category.category_level !== 0) {
       setIsRedirecting(true);
-      window.location.href = "/signin";
+      navigate("/signin");
     }
   }, [user]);
 

@@ -1,4 +1,4 @@
-import { Grid, MenuItem, TextField } from "@mui/material";
+import { Grid } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import MKBox from "components/MKBox";
 import MKInput from "components/MKInput";
@@ -7,21 +7,16 @@ import SimpleFooter from "examples/Footers/SimpleFooter";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
 import { useEffect, useRef, useState } from "react";
 import magasin_routes from "routes/magasin";
-import { getSalesPoint } from "routes/ws_call";
-import { affectEmployee } from "routes/ws_call";
-import { searchEmployees } from "routes/ws_call";
+import { searchLaptop } from "routes/ws_call";
 
-export default function EmployeeAffectation() {
+export default function Achat() {
   const q = useRef();
 
-  const [employees, setEmployees] = useState([]);
-  const [salesPoints, setSalesPoints] = useState([]);
+  const [laptops, setLaptops] = useState([]);
   const fetchData = async () => {
     try {
-      const data = await searchEmployees(q.current.value);
-      const stores = await getSalesPoint();
-      setSalesPoints(stores);
-      setEmployees(data);
+      const data = await searchLaptop(q.current.value);
+      setLaptops(data);
     } catch (error) {
       console.error(error);
     }
@@ -32,76 +27,78 @@ export default function EmployeeAffectation() {
   }, []);
 
   function handleSearch() {
-    searchEmployees(q.current.value)
+    searchLaptop(q.current.value)
       .then((data) => {
-        setEmployees(data);
+        setLaptops(data);
       })
       .catch((error) => {
+        // Handle any potential errors from the Promise
         console.error(error);
       });
   }
 
-  const affectSelectInput = (params) => {
-    const affect = (event, params) => {
-      event.preventDefault();
-      const value = event.target.value;
+  // const handleClick = (
+  //   event,
+  //   params // GridRowParams
+  // ) => {
+  //   event.preventDefault();
+  //   const data = laptops.find((laptop) => laptop.id === params.row.id);
 
-      console.log(value);
-      console.log(params.row.id);
-      affectEmployee(params.row.id, value);
-    };
+  //   navigate(`/magasin/laptops/${params.row.id}`, {
+  //     state: data,
+  //   });
+  // };
 
-    return (
-      <TextField
-        sx={{ minWidth: "fit-content" }}
-        label="Affectation"
-        onChange={(event) => {
-          affect(event, params);
-        }}
-        defaultValue={params.row.store.id}
-        fullWidth
-        select
-        placeholder="Points de vente"
-        variant="standard"
-      >
-        <MenuItem value={""} disabled></MenuItem>
-        {salesPoints.map((option) => (
-          <MenuItem key={option.id} value={option.id}>
-            {option.store_name}
-          </MenuItem>
-        ))}
-      </TextField>
-    );
+  const qttInput = (params) => {
+    console.log(params.row);
+    return <input type="number" />;
   };
-
   const columns = [
     {
-      field: "lastname",
-      headerName: "Nom",
-      width: 150,
+      field: "Marque",
+      headerName: "Marque",
+      valueGetter: (params) => `${params.row.model.brand.brand_name || ""}`,
     },
     {
-      field: "firstname",
-      headerName: "Prénom",
-      width: 150,
-    },
-    {
-      field: "email",
-      headerName: "E-mail",
+      field: "Model",
+      headerName: "Référence",
       width: 200,
+      valueGetter: (params) => `${params.row.model.model_name || ""}`,
+    },
+    {
+      field: "Cpu",
+      headerName: "CPU",
+      width: 150,
+      valueGetter: (params) => `${params.row.model.cpu.cpu_name || ""}`,
     },
 
     {
-      field: "profil",
-      headerName: "Poste",
+      field: "Ram",
+      headerName: "Ram",
       width: 150,
-      valueGetter: (params) => `${params.row.profil.profil_name || ""}`,
+      valueGetter: (params) =>
+        `${params.row.model.ram.ram_name + "," || ""} ${
+          params.row.model.ram.ram_value + " Go" || ""
+        }`,
     },
     {
-      field: "salespoint",
-      headerName: "Point de vente ",
-      width: 200,
-      renderCell: (params) => affectSelectInput(params),
+      field: "Disk",
+      headerName: "Disque",
+      width: 150,
+      valueGetter: (params) =>
+        `${params.row.model.disktype.type_name + "," || ""} ${
+          params.row.model.disk_size + " Go" || ""
+        }`,
+    },
+    {
+      field: "qtt",
+      headerName: "Qtt ",
+      renderCell: (params) => qttInput(params),
+    },
+    {
+      field: "montant",
+      headerName: "Prix d'achat",
+      renderCell: (params) => qttInput(params),
     },
   ];
 
@@ -111,7 +108,7 @@ export default function EmployeeAffectation() {
       <MKBox component="section" py={12} minHeight="75vh" marginTop="50px">
         <Grid container item justifyContent="center" xs={10} lg={7} mx="auto" textAlign="center">
           <MKTypography variant="h3" mb={1}>
-            Affectations des employés
+            Approvisionnement des ordinateurs
           </MKTypography>
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
@@ -130,7 +127,8 @@ export default function EmployeeAffectation() {
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
           <DataGrid
-            rows={employees}
+            checkboxSelection
+            rows={laptops}
             columns={columns}
             initialState={{
               pagination: {
@@ -138,6 +136,7 @@ export default function EmployeeAffectation() {
               },
             }}
             pageSizeOptions={[5, 10]}
+            // onRowClick={handleClick}
           />
         </Grid>
       </MKBox>

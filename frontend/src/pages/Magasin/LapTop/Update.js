@@ -12,7 +12,7 @@ import FormInput from "own/components/form/FormInput";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
 import magasin_routes from "routes/magasin";
 import SimpleFooter from "examples/Footers/SimpleFooter";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import MKAlert from "components/MKAlert";
 import { updateLaptop } from "routes/ws_call";
 import { getModelsByBrand } from "routes/ws_call";
@@ -21,6 +21,7 @@ import { getBrands } from "routes/ws_call";
 export default function UpdateLaptop() {
   const location = useLocation();
   const data = location.state;
+  const navigate = useNavigate();
 
   const defaultBrand = data.model.brand;
   const defaultModel = data.model;
@@ -94,7 +95,7 @@ export default function UpdateLaptop() {
 
     await updateLaptop(data.id, modelRef.current.value)
       .then(() => {
-        window.location.replace("/magasin/laptops/list");
+        navigate("/magasin/laptops/list");
       })
       .catch((e) => {
         setError(e.message);

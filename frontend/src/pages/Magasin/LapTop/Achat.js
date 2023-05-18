@@ -13,14 +13,19 @@ import DefaultNavbar from "examples/Navbars/DefaultNavbar";
 import magasin_routes from "routes/magasin";
 import SimpleFooter from "examples/Footers/SimpleFooter";
 import { getBrands } from "routes/ws_call";
-import { getModelsByBrand } from "routes/ws_call";
 import MKAlert from "components/MKAlert";
-import { saveLaptop } from "routes/ws_call";
+import MKInput from "components/MKInput";
+import { getLaptopsByBrand } from "routes/ws_call";
+import { purchaseLaptop } from "routes/ws_call";
 import { useNavigate } from "react-router-dom";
 
-function SaveLaptop() {
+function PurchaseLaptop() {
   const brandRef = useRef({});
-  const modelRef = useRef({});
+  const laptopRef = useRef({});
+  const dateRef = useRef();
+  const qttRef = useRef(1);
+  const prixRef = useRef(0);
+
   const navigate = useNavigate();
 
   const [brandData, setBrandData] = useState([]);
@@ -39,7 +44,7 @@ function SaveLaptop() {
   }, []);
 
   function onbrandchange() {
-    getModelsByBrand(brandRef.current.value)
+    getLaptopsByBrand(brandRef.current.value)
       .then((models) => {
         setmodelData(models);
       })
@@ -67,7 +72,7 @@ function SaveLaptop() {
     label: "Modèle",
     type: "data",
     placeholder: "Référence",
-    ref: modelRef,
+    ref: laptopRef,
     required: true,
 
     fullWidth: true,
@@ -78,16 +83,21 @@ function SaveLaptop() {
     },
   };
 
-  const title = "Enregistrement d'un ordintateur";
+  const title = "Achat d'un ordintaeur";
 
   const [error, setError] = useState("");
 
   const save = async (event) => {
     event.preventDefault();
 
-    await saveLaptop(modelRef.current.value)
+    await purchaseLaptop(
+      dateRef.current.value,
+      laptopRef.current.value,
+      qttRef.current.value,
+      prixRef.current.value
+    )
       .then(() => {
-        navigate("/magasin/laptops/list");
+        navigate("/magasin/laptops/transfer");
       })
       .catch((e) => {
         setError(e.message);
@@ -109,15 +119,53 @@ function SaveLaptop() {
               <MKBox p={3}>
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
+                    <MKInput
+                      variant="standard"
+                      label="Date"
+                      type="date"
+                      defaultValue={new Date()}
+                      fullWidth
+                      inputRef={dateRef}
+                      required
+                    />
+                  </Grid>
+                </Grid>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
                     <FormInput {...brandInput} />
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <FormInput {...modelInput} />
                   </Grid>
                 </Grid>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <MKInput
+                      variant="standard"
+                      label="Quantité"
+                      type="number"
+                      defaultValue={1}
+                      InputLabelProps={{ shrink: true, min: 1 }}
+                      fullWidth
+                      inputRef={qttRef}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <MKInput
+                      type="number"
+                      variant="standard"
+                      label="Prix unitaire"
+                      InputLabelProps={{ shrink: true, step: "any", min: 0 }}
+                      fullWidth
+                      inputRef={prixRef}
+                      required
+                    />
+                  </Grid>
+                </Grid>
                 <Grid container item justifyContent="center" xs={12} my={2}>
                   <MKButton type="submit" variant="gradient" color="dark" fullWidth>
-                    Enregistrer
+                    Acheter
                   </MKButton>
                 </Grid>
               </MKBox>
@@ -133,4 +181,4 @@ function SaveLaptop() {
   );
 }
 
-export default SaveLaptop;
+export default PurchaseLaptop;

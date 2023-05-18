@@ -189,6 +189,27 @@ export const getModelsByBrand = async (brand_id) => {
   return data.data.content;
 };
 
+export const getLaptopsByBrand = async (brand_id) => {
+  var dataToSend = JSON.stringify({
+    brand: { id: brand_id ? brand_id : -5 },
+  });
+
+  const response = await responseInit(
+    "http://localhost:8080/laptop_model/search",
+    "POST",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
 export const saveLaptop = async (model_id) => {
   var dataToSend = JSON.stringify({
     model: { id: model_id },
@@ -289,6 +310,32 @@ export const affectEmployee = async (id, store_id) => {
 
 export const getSalesPoint = async () => {
   const response = await responseInit(`http://localhost:8080/stores/isSalesPoint`, "GET", null);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const purchaseLaptop = async (date, laptop_id, qtt, prix) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  var dataToSend = JSON.stringify({
+    laptop: { id: laptop_id },
+    purchase_date: date,
+    qtt: qtt,
+    purchase_price: prix,
+    employee: { id: user.id },
+  });
+
+  const response = await responseInit(
+    "http://localhost:8080/laptops/purchase",
+    "POST",
+    null,
+    dataToSend
+  );
 
   const data = await response.json();
 

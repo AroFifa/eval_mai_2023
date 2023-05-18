@@ -156,7 +156,7 @@ CREATE TABLE Sale (
 
 -- VIEW
 CREATE OR REPLACE VIEW V_laptop_search AS 
-SELECT l.*,m.model_name,m.brand_name,m.cpu_name,m.ram_name,m.type_name from Laptop l join v_model_tmp m on l.model_id = m.id;
+SELECT l.*,m.model_name,m.brand_id,m.brand_name,m.cpu_name,m.ram_name,m.type_name from Laptop l join v_model_tmp m on l.model_id = m.id;
 
 CREATE OR REPLACE VIEW V_model_tmp AS
 SELECT m.*,b.brand_name,cpu.cpu_name,r.ram_name,d.type_name from Model m

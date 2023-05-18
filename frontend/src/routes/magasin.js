@@ -4,6 +4,7 @@ import SignOut from "pages/Authentication/Signout";
 import SaveLaptop from "pages/Magasin/LapTop/Save";
 import ListLaptop from "pages/Magasin/LapTop/List";
 import EmployeeAffectation from "pages/Magasin/Salespoint/EmployeeAffectation";
+import Achat from "pages/Magasin/LapTop/Achat";
 
 const magasin_routes = [
   {
@@ -40,7 +41,7 @@ const magasin_routes = [
           {
             name: "Achat",
             route: "/magasin/laptops/purchase",
-            component: <Home />,
+            component: <Achat />,
           },
           {
             name: "Prix de ventes",

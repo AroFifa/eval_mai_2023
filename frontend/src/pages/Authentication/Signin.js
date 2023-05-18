@@ -16,10 +16,12 @@ import { useRef } from "react";
 import { signIn } from "routes/ws_call";
 import { useState } from "react";
 import MKAlert from "components/MKAlert";
+import { useNavigate } from "react-router-dom";
 
 export default function Signin() {
   const [error, setError] = useState("");
 
+  const navigate = useNavigate();
   const email = useRef();
   const passwd = useRef();
 
@@ -30,8 +32,8 @@ export default function Signin() {
       const data = await signIn(email.current.value, passwd.current.value);
 
       sessionStorage.setItem("user", JSON.stringify(data));
-      if (data.store.category.category_level === 0) window.location.href = "/magasin";
-      else if (data.store.category.category_level === 10) window.location.href = "/salespoint";
+      if (data.store.category.category_level === 0) navigate("/magasin");
+      else if (data.store.category.category_level === 10) navigate("/salespoint");
     } catch (error) {
       setError(error.message);
     }
