@@ -122,9 +122,11 @@ CREATE TABLE Transfer (
   transfer_date date not null default CURRENT_DATE,
   employee_id integer REFERENCES Employee(id) not null,
   store_to integer REFERENCES Store(id) not null,
+  store_from integer REFERENCES Store(id) not null,
   stock_id integer REFERENCES Stock(id) not null,
   qtt positive_int not null check(qtt>0) default 1
 );
+
 
 CREATE TABLE Validation_status (
   id SERIAL PRIMARY KEY,
@@ -148,9 +150,6 @@ CREATE TABLE Sale (
   purchase_price decimal_scale,
   clientName varchar not null,
   store_id integer REFERENCES Store(id) not null
-<<<<<<< Updated upstream
-);
-=======
 );
 
 
@@ -168,4 +167,3 @@ join Disktype d on m.disktype_id = d.id;
 
 -- CONSTRAINT
 ALTER TABLE laptop ADD CONSTRAINT model_uniquekey UNIQUE (model_id);
->>>>>>> Stashed changes
