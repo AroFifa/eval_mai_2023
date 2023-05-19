@@ -117,6 +117,8 @@ CREATE TABLE Stock (
   transaction_id integer REFERENCES Transaction_type(id) not null
 );
 
+
+
 CREATE TABLE Transfer (
   id SERIAL PRIMARY KEY,
   transfer_date date not null default CURRENT_DATE,
@@ -125,22 +127,21 @@ CREATE TABLE Transfer (
   store_from integer REFERENCES Store(id) not null,
   laptop_id integer REFERENCES LapTop(id) not null,
   qtt positive_int not null check(qtt>0) default 1
-);
-
-
-CREATE TABLE Validation_status (
-  id SERIAL PRIMARY KEY,
-  status_name varchar unique not null,
-  status_value smallint unique not null
+  check(store_from <> store_to)
 );
 
 CREATE TABLE Reception (
   id SERIAL PRIMARY KEY,
-  validation_date date not null default CURRENT_DATE,
-  status_id integer REFERENCES Validation_status(id) not null,
+  reception_date date not null default CURRENT_DATE,
   employee_id integer REFERENCES Employee(id) not null,
-  qtt_received positive_int not null check(qtt_received>0)
+  store_id integer REFERENCES Store(id) not null,
+  laptop_id integer REFERENCES LapTop(id) not null,
+  qtt positive_int not null check(qtt>0) default 1
 );
+
+
+
+
 
 CREATE TABLE Sale (
   id SERIAL PRIMARY KEY,
@@ -196,3 +197,44 @@ FULL JOIN
 CREATE OR REPLACE VIEW V_etat_stock_search as 
 SELECT s.*, l.model_name,l.brand_id,l.brand_name,l.cpu_name,l.ram_name,l.type_name from V_etat_stock s join v_laptop_search l  
 on s.laptop_id =  l.id;
+
+
+
+
+-- 
+-- 
+-- 
+
+CREATE OR REPLACE VIEW V_transfer
+AS
+SELECT laptop_id,store_to as receiver, COALESCE(sum(qtt),0) qtt
+from transfer
+group by laptop_id, store_to;
+
+
+CREATE OR REPLACE VIEW V_reception
+AS
+SELECT laptop_id,store_id as receiver, COALESCE(sum(qtt),0) qtt
+from Reception
+group by laptop_id, store_id;
+
+CREATE OR REPLACE VIEW V_received AS
+SELECT
+    COALESCE(t.laptop_id, r.laptop_id) AS laptop_id,
+    COALESCE(t.receiver, r.receiver) AS receiver ,
+    COALESCE(t.qtt, 0) - COALESCE(r.qtt, 0) AS qtt
+    from v_transfer t full join V_reception r 
+on t.laptop_id = r.laptop_id 
+and t.receiver = r.receiver;
+
+
+ 
+
+CREATE OR REPLACE VIEW v_received_search AS
+SELECT
+l.*,r.receiver store_id,r.qtt,r.laptop_id
+FROM v_received r 
+  join V_laptop_search l
+  on r.laptop_id = l.id where r.qtt!=0;
+
+

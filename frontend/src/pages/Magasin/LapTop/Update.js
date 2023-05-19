@@ -17,6 +17,7 @@ import MKAlert from "components/MKAlert";
 import { updateLaptop } from "routes/ws_call";
 import { getModelsByBrand } from "routes/ws_call";
 import { getBrands } from "routes/ws_call";
+import MKInput from "components/MKInput";
 
 export default function UpdateLaptop() {
   const location = useLocation();
@@ -25,8 +26,10 @@ export default function UpdateLaptop() {
 
   const defaultBrand = data.model.brand;
   const defaultModel = data.model;
+  const defaultPrice = data.sales_price;
   const brandRef = useRef(defaultBrand);
   const modelRef = useRef(defaultModel);
+  const priceRef = useRef();
 
   const [brandData, setBrandData] = useState([]);
   const [modelData, setmodelData] = useState([]);
@@ -93,7 +96,11 @@ export default function UpdateLaptop() {
   const update = async (event) => {
     event.preventDefault();
 
-    await updateLaptop(data.id, modelRef.current.value)
+    await updateLaptop(
+      data.id,
+      priceRef.current.value,
+      modelRef.current.value ? modelRef.current.value : defaultModel.id
+    )
       .then(() => {
         navigate("/magasin/laptops/list");
       })
@@ -120,6 +127,23 @@ export default function UpdateLaptop() {
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <FormInput {...modelInput} />
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={8}>
+                    <MKInput
+                      variant="standard"
+                      label="Prix"
+                      type="number"
+                      inputRef={priceRef}
+                      placeholder="montant"
+                      InputLabelProps={{ shrink: true }}
+                      defaultValue={defaultPrice}
+                      InputProps={{ inputProps: { min: 1, step: "any" } }}
+                      fullWidth
+                      required
+                    />
                   </Grid>
                 </Grid>
                 <Grid container item justifyContent="center" xs={12} my={2}>

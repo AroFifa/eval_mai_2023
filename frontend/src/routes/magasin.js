@@ -8,6 +8,7 @@ import Purchase from "pages/Magasin/LapTop/Purchase";
 import Transfert from "pages/Magasin/LapTop/Transfert";
 import ListSalespoint from "pages/Magasin/Salespoint/List";
 import SaveSalespoint from "pages/Magasin/Salespoint/Save";
+import Reception from "pages/Magasin/Salespoint/Reception";
 
 const magasin_routes = [
   {
@@ -48,6 +49,11 @@ const magasin_routes = [
             name: "Transfert",
             route: "/magasin/laptops/transfer",
             component: <Transfert />,
+          },
+          {
+            name: "Réception",
+            route: "/magasin/laptops/reception",
+            component: <Reception />,
           },
         ],
       },

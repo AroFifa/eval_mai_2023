@@ -1,15 +1,10 @@
-import { Logout, Home as HomeIcon, Storage, Payment } from "@mui/icons-material";
+import { Logout, Storage, Payment } from "@mui/icons-material";
 import Home from "pages/PointVentes/Home";
 import SignOut from "pages/Authentication/Signout";
+import Transfert from "pages/Magasin/LapTop/Transfert";
+import Reception from "pages/Magasin/Salespoint/Reception";
 
 const point_ventes_routes = [
-  {
-    name: "Home",
-    icon: <HomeIcon />,
-    route: "/point_vente/home",
-    component: <Home />,
-    key: 1,
-  },
   {
     name: "Magasin central",
     icon: <Storage />,
@@ -22,12 +17,12 @@ const point_ventes_routes = [
           {
             name: "Réception",
             route: "/point_vente/transfers/valid",
-            component: <Home />,
+            component: <Reception />,
           },
           {
             name: "Renvoi",
             route: "/point_vente/transfers/central",
-            component: <Home />,
+            component: <Transfert />,
           },
         ],
       },

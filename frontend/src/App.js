@@ -31,12 +31,12 @@ import routes from "routes";
 import routesR from "routes/routes";
 import magasin_routes from "routes/magasin";
 import Signin from "pages/Authentication/Signin";
-import HomeVente from "pages/PointVentes/Home";
 import point_ventes_routes from "routes/point_ventes";
 import Template from "own/Template";
 import UpdateLaptop from "pages/Magasin/LapTop/Update";
 import UpdateSalespoint from "pages/Magasin/Salespoint/Update";
 import SaveLaptop from "pages/Magasin/LapTop/Save";
+import Reception from "pages/Magasin/Salespoint/Reception";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -70,7 +70,7 @@ export default function App() {
         {getRoutes(point_ventes_routes)}
         <Route path="/signin" element={<Signin />} />
         <Route path="/magasin" element={<SaveLaptop />} />
-        <Route path="/salespoint" element={<HomeVente />} />
+        <Route path="/salespoint" element={<Reception />} />
         <Route path="/" element={<Navigate to="/signin" />} />
 
         <Route path="/presentation" element={<Presentation />} />

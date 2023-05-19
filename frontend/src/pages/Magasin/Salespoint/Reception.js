@@ -7,51 +7,45 @@ import MKInput from "components/MKInput";
 import MKTypography from "components/MKTypography";
 import SimpleFooter from "examples/Footers/SimpleFooter";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
-import FormInput from "own/components/form/FormInput";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import magasin_routes from "routes/magasin";
 import point_ventes_routes from "routes/point_ventes";
-import { sendLaptops } from "routes/ws_call";
-import { searchStocks } from "routes/ws_call";
-import { getSalesPoint } from "routes/ws_call";
-
-export default function Transfert() {
+import { receiveLaptops } from "routes/ws_call";
+import { filterReception } from "routes/ws_call";
+export default function Reception() {
   const [selectedRows, setSelectedRows] = useState([]);
 
   const user = JSON.parse(sessionStorage.getItem("user"));
+
+  const navigate = useNavigate();
 
   const routes = user.store.id === 1 ? magasin_routes : point_ventes_routes;
   const brand = user.store.id === 1 ? "Magasin central" : "Point vente";
   const smallbrand = user.store.id === 1 ? null : user.store.store_name;
 
-  const title = user.store.id === 1 ? "Transfert" : "Renvoi";
-  const hidden = user.store.id === 1 ? false : true;
-  const isTransfer = user.store.id === 1 ? true : false;
-
   const [error, setError] = useState("");
   const qttRef = useRef([]);
-  const dateRef = useRef();
-  const storeRef = hidden ? useRef(1) : useRef({});
-
   const q = useRef();
+  const isTransfer = user.store.id === 1 ? true : false;
 
-  const [stocks, setStocks] = useState([]);
-  const [salesPoints, setSalesPoints] = useState([]);
+  const [receptions, setReceptions] = useState([]);
   const fetchData = async () => {
     try {
-      const data = await searchStocks(q.current.value);
-      setStocks(data);
-      const stores = await getSalesPoint();
-      setSalesPoints(stores);
+      const data = await filterReception(q.current.value);
+      setReceptions(data);
     } catch (error) {
       console.error(error);
     }
   };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   function handleSearch() {
-    searchStocks(q.current.value)
+    filterReception(q.current.value)
       .then((data) => {
-        setStocks(data);
+        setReceptions(data);
       })
       .catch((error) => {
         // Handle any potential errors from the Promise
@@ -59,35 +53,22 @@ export default function Transfert() {
       });
   }
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // console.log(receptions);
 
-  const salesPointInput = {
-    label: "Transférer vers",
-    type: "data",
-    placeholder: "point de ventes",
-    ref: storeRef,
-    required: true,
-
-    fullWidth: true,
-    data: {
-      data: salesPoints,
-      label: "store_name",
-      value: "id",
-    },
-  };
-
-  const handleTransfer = async (event) => {
+  const handleReceive = async (event) => {
     event.preventDefault;
+
+    const today = new Date().toISOString().split("T")[0];
 
     const transferItems = selectedRows.map((row) => ({
       laptop_id: row,
       qtt: qttRef.current[row].value,
     }));
 
-    await sendLaptops(isTransfer, dateRef.current.value, storeRef.current.value, transferItems)
-      .then(() => {})
+    await receiveLaptops(isTransfer, today, transferItems)
+      .then(() => {
+        navigate("/point_vente/transfers/central");
+      })
       .catch((e) => {
         setError(e.message);
       });
@@ -103,7 +84,7 @@ export default function Transfert() {
         type="number"
         inputRef={(ref) => (qttRef.current[parseInt(params.row.id)] = ref)}
         placeholder="qtt"
-        defaultValue={1}
+        defaultValue={params.row.qtt}
         InputLabelProps={{ shrink: true }}
         InputProps={{ inputProps: { min: 1, max: params.row.qtt } }}
         fullWidth
@@ -119,7 +100,7 @@ export default function Transfert() {
     { field: "model_name", headerName: "Model", width: 300 },
     {
       field: "qtt",
-      headerName: "Disponible ",
+      headerName: "Envoyé ",
     },
     {
       field: "qttinput",
@@ -128,21 +109,20 @@ export default function Transfert() {
     },
   ];
 
-  const rows = stocks.map((item) => ({
+  const rows = receptions.map((item) => ({
     id: item.id,
-    brand_name: item.laptop.model.brand.brand_name,
-    model_name: item.laptop.model.model_name,
+    brand_name: item.laptop.brand.brand_name,
+    model_name: item.laptop.model_name,
     qtt: item.qtt,
   }));
 
-  const today = new Date().toISOString().split("T")[0];
   return (
     <>
       <DefaultNavbar routes={routes} brand={brand} smallbrand={smallbrand} sticky />
       <MKBox component="section" py={12} minHeight="75vh" marginTop="50px">
         <Grid container item justifyContent="center" xs={10} lg={7} mx="auto" textAlign="center">
           <MKTypography variant="h3" mb={1}>
-            {title} des ordinateurs
+            Réception des ordinateurs
           </MKTypography>
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
@@ -158,29 +138,8 @@ export default function Transfert() {
           />
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
-          <form type="submit" onSubmit={(event) => handleTransfer(event)}>
+          <form type="submit" onSubmit={(event) => handleReceive(event)}>
             {" "}
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <MKInput
-                  variant="standard"
-                  label="Date"
-                  type="date"
-                  defaultValue={today}
-                  fullWidth
-                  inputRef={dateRef}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                />
-              </Grid>
-              {hidden ? (
-                <></>
-              ) : (
-                <Grid item xs={12} md={6}>
-                  <FormInput {...salesPointInput} />
-                </Grid>
-              )}
-            </Grid>
             <DataGrid
               rows={rows}
               columns={columns}
@@ -199,7 +158,7 @@ export default function Transfert() {
             />
             <Grid container item justifyContent="center" xs={12} my={2}>
               <MKButton type="submit" variant="gradient" color="dark" fullWidth>
-                Transférer
+                Valider la réception
               </MKButton>
             </Grid>
           </form>

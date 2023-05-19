@@ -17,10 +17,12 @@ import { getModelsByBrand } from "routes/ws_call";
 import MKAlert from "components/MKAlert";
 import { saveLaptop } from "routes/ws_call";
 import { useNavigate } from "react-router-dom";
+import MKInput from "components/MKInput";
 
 function SaveLaptop() {
   const brandRef = useRef({});
   const modelRef = useRef({});
+  const priceRef = useRef();
   const navigate = useNavigate();
 
   const [brandData, setBrandData] = useState([]);
@@ -85,7 +87,7 @@ function SaveLaptop() {
   const save = async (event) => {
     event.preventDefault();
 
-    await saveLaptop(modelRef.current.value)
+    await saveLaptop(priceRef.current.value, modelRef.current.value)
       .then(() => {
         navigate("/magasin/laptops/list");
       })
@@ -115,6 +117,23 @@ function SaveLaptop() {
                     <FormInput {...modelInput} />
                   </Grid>
                 </Grid>
+
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={8}>
+                    <MKInput
+                      variant="standard"
+                      label="Prix"
+                      type="number"
+                      inputRef={priceRef}
+                      placeholder="montant"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ inputProps: { min: 1, step: "any" } }}
+                      fullWidth
+                      required
+                    />
+                  </Grid>
+                </Grid>
+
                 <Grid container item justifyContent="center" xs={12} my={2}>
                   <MKButton type="submit" variant="gradient" color="dark" fullWidth>
                     Enregistrer

@@ -222,9 +222,10 @@ export const getLaptopsByBrand = async (brand_id) => {
   return data.data.content;
 };
 
-export const saveLaptop = async (model_id) => {
+export const saveLaptop = async (prix, model_id) => {
   var dataToSend = JSON.stringify({
     model: { id: model_id },
+    sales_price: prix,
   });
 
   const response = await responseInit("http://localhost:8080/laptops", "POST", null, dataToSend);
@@ -264,9 +265,10 @@ export const saveSalespoint = async (location_id, name) => {
   return data.data.content;
 };
 
-export const updateLaptop = async (id, model_id) => {
+export const updateLaptop = async (id, prix, model_id) => {
   var dataToSend = JSON.stringify({
     model: { id: model_id },
+    sales_price: prix,
   });
 
   const response = await responseInit(
@@ -405,8 +407,10 @@ export const purchaseLaptops = async (date, purchaseItems) => {
 };
 
 export const searchStocks = async (q) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+
   const response = await responseInit(
-    `http://localhost:8080/stockstatus/mainsearch?q=${q ? q : ""}`,
+    `http://localhost:8080/stockstatus/search?store_id=${user.store.id}&q=${q ? q : ""}`,
     "GET",
     null
   );
@@ -420,18 +424,66 @@ export const searchStocks = async (q) => {
   return data.data.content;
 };
 
-export const sendLaptops = async (date, store_id, transferItems) => {
+export const filterReception = async () => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+
+  const response = await responseInit(
+    `http://localhost:8080/transfers/search?store_id=${user.store.id}`,
+    "GET",
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const sendLaptops = async (isTransfer, date, store_id, transferItems) => {
   const user = JSON.parse(sessionStorage.getItem("user"));
   var dataToSend = JSON.stringify({
     date: date,
     items: transferItems,
     employee: user,
-    store: { id: store_id },
-    isTransfer: true,
+    store: { id: store_id ? store_id : user.store.id },
+    isTransfer: isTransfer,
   });
 
+  // console.log(dataToSend);
+  // alert("BREAK");
   const response = await responseInit(
     "http://localhost:8080/stockstatus/transfer",
+    "POST",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data;
+};
+
+export const receiveLaptops = async (isTransfer, date, transferItems) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  var dataToSend = JSON.stringify({
+    date: date,
+    items: transferItems,
+    employee: user,
+    store: { id: user.store.id },
+    isTransfer: isTransfer,
+  });
+
+  // console.log(dataToSend);
+  // alert("BREAK");
+  const response = await responseInit(
+    "http://localhost:8080/stockstatus/receive",
     "POST",
     null,
     dataToSend

@@ -138,3 +138,10 @@ INSERT INTO Model ( id,brand_id, model_name, screen_id, cpu_id, ram_id, disktype
 (default, 7, 'Microsoft Surface Book 3', 4, 4, 8, 3, 1000),
 (default, 8, 'Samsung Galaxy Book Flex 2', 2, 3, 3, 3, 512),
 (default, 8, 'Samsung Galaxy Chromebook', 1, 8, 7, 2, 256);
+
+INSERT INTO Transfer_type (id, type_name, type_level) VALUES 
+(1,'transfert',10),
+(2,'réception',-10);
+
+
+
