@@ -470,6 +470,33 @@ export const sendLaptops = async (isTransfer, date, store_id, transferItems) => 
   return data.data;
 };
 
+export const saleLaptops = async (date, transferItems) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  var dataToSend = JSON.stringify({
+    date: date,
+    items: transferItems,
+    employee: user,
+    store: { id: user.store.id },
+    isTransfer: false,
+  });
+
+  console.log(dataToSend);
+  alert("BREAK");
+  const response = await responseInit(
+    "http://localhost:8080/stockstatus/sold",
+    "POST",
+    null,
+    dataToSend
+  );
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data;
+};
+
 export const receiveLaptops = async (isTransfer, date, transferItems) => {
   const user = JSON.parse(sessionStorage.getItem("user"));
   var dataToSend = JSON.stringify({

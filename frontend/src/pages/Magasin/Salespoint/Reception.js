@@ -21,7 +21,7 @@ export default function Reception() {
   const navigate = useNavigate();
 
   const routes = user.store.id === 1 ? magasin_routes : point_ventes_routes;
-  const brand = user.store.id === 1 ? "Magasin central" : "Point vente";
+  const brand = user.store.id === 1 ? "Magasin central" : "Point de ventes";
   const smallbrand = user.store.id === 1 ? null : user.store.store_name;
 
   const [error, setError] = useState("");

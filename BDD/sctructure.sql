@@ -153,7 +153,12 @@ CREATE TABLE Sale (
   store_id integer REFERENCES Store(id) not null
 );
 
-
+CREATE TABLE Mouvement (
+  id SERIAL PRIMARY KEY,
+  price decimal_scale not null,
+  transaction_id integer REFERENCES Transaction_type(id) not null,
+  transaction_date date not null default CURRENT_DATE
+);
 
 -- VIEW
 CREATE OR REPLACE VIEW V_laptop_search AS 

@@ -1,8 +1,8 @@
 import { Logout, Storage, Payment } from "@mui/icons-material";
-import Home from "pages/PointVentes/Home";
 import SignOut from "pages/Authentication/Signout";
 import Transfert from "pages/Magasin/LapTop/Transfert";
 import Reception from "pages/Magasin/Salespoint/Reception";
+import Sale from "pages/PointVentes/Vente";
 
 const point_ventes_routes = [
   {
@@ -41,7 +41,7 @@ const point_ventes_routes = [
           {
             name: "Vente",
             route: "/point_vente/laptop/sale",
-            component: <Home />,
+            component: <Sale />,
           },
         ],
       },

@@ -7,42 +7,32 @@ import MKInput from "components/MKInput";
 import MKTypography from "components/MKTypography";
 import SimpleFooter from "examples/Footers/SimpleFooter";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
-import FormInput from "own/components/form/FormInput";
 import { useEffect, useRef, useState } from "react";
-import magasin_routes from "routes/magasin";
+import { NumericFormat } from "react-number-format";
 import point_ventes_routes from "routes/point_ventes";
-import { sendLaptops } from "routes/ws_call";
+import { saleLaptops } from "routes/ws_call";
 import { searchStocks } from "routes/ws_call";
-import { getSalesPoint } from "routes/ws_call";
 
-export default function Transfert() {
+export default function Sale() {
   const [selectedRows, setSelectedRows] = useState([]);
 
   const user = JSON.parse(sessionStorage.getItem("user"));
 
-  const routes = user.store.id === 1 ? magasin_routes : point_ventes_routes;
-  const brand = user.store.id === 1 ? "Magasin central" : "Point de ventes";
-  const smallbrand = user.store.id === 1 ? null : user.store.store_name;
-
-  const title = user.store.id === 1 ? "Transfert" : "Renvoi";
-  const hidden = user.store.id === 1 ? false : true;
-  const isTransfer = user.store.id === 1 ? true : false;
+  const routes = point_ventes_routes;
+  const brand = "Point de ventes";
+  const smallbrand = user.store.store_name;
 
   const [error, setError] = useState("");
   const qttRef = useRef([]);
   const dateRef = useRef();
-  const storeRef = hidden ? useRef(1) : useRef({});
 
   const q = useRef();
 
   const [stocks, setStocks] = useState([]);
-  const [salesPoints, setSalesPoints] = useState([]);
   const fetchData = async () => {
     try {
       const data = await searchStocks(q.current.value);
       setStocks(data);
-      const stores = await getSalesPoint();
-      setSalesPoints(stores);
     } catch (error) {
       console.error(error);
     }
@@ -63,22 +53,7 @@ export default function Transfert() {
     fetchData();
   }, []);
 
-  const salesPointInput = {
-    label: "Transférer vers",
-    type: "data",
-    placeholder: "point de ventes",
-    ref: storeRef,
-    required: true,
-
-    fullWidth: true,
-    data: {
-      data: salesPoints,
-      label: "store_name",
-      value: "id",
-    },
-  };
-
-  const handleTransfer = async (event) => {
+  const handleSales = async (event) => {
     event.preventDefault;
 
     const transferItems = selectedRows.map((row) => ({
@@ -86,7 +61,7 @@ export default function Transfert() {
       qtt: qttRef.current[row].value,
     }));
 
-    await sendLaptops(isTransfer, dateRef.current.value, storeRef.current.value, transferItems)
+    await saleLaptops(dateRef.current.value, transferItems)
       .then(() => {})
       .catch((e) => {
         setError(e.message);
@@ -114,6 +89,19 @@ export default function Transfert() {
     );
   };
 
+  const format = (num) => {
+    return (
+      <NumericFormat
+        value={num}
+        displayType={"text"}
+        decimalScale={2}
+        decimalSeparator={"."}
+        thousandSeparator={" "}
+        fixedDecimalScale={true}
+      />
+    );
+  };
+
   const columns = [
     { field: "brand_name", headerName: "Brand", width: 150 },
     { field: "model_name", headerName: "Model", width: 300 },
@@ -126,6 +114,15 @@ export default function Transfert() {
       headerName: "Quantité ",
       renderCell: (params) => qttInput(params),
     },
+    {
+      field: "prix",
+      headerName: "Prix unitaire",
+      width: 200,
+
+      renderCell: (params) => {
+        return format(params.value);
+      },
+    },
   ];
 
   const rows = stocks.map((item) => ({
@@ -133,6 +130,7 @@ export default function Transfert() {
     brand_name: item.laptop.model.brand.brand_name,
     model_name: item.laptop.model.model_name,
     qtt: item.qtt,
+    prix: item.laptop.sales_price,
   }));
 
   const today = new Date().toISOString().split("T")[0];
@@ -142,7 +140,7 @@ export default function Transfert() {
       <MKBox component="section" py={12} minHeight="75vh" marginTop="50px">
         <Grid container item justifyContent="center" xs={10} lg={7} mx="auto" textAlign="center">
           <MKTypography variant="h3" mb={1}>
-            {title} des ordinateurs
+            Vente des ordinateurs
           </MKTypography>
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
@@ -158,7 +156,7 @@ export default function Transfert() {
           />
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
-          <form type="submit" onSubmit={(event) => handleTransfer(event)}>
+          <form type="submit" onSubmit={(event) => handleSales(event)}>
             {" "}
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
@@ -173,13 +171,6 @@ export default function Transfert() {
                   required
                 />
               </Grid>
-              {hidden ? (
-                <></>
-              ) : (
-                <Grid item xs={12} md={6}>
-                  <FormInput {...salesPointInput} />
-                </Grid>
-              )}
             </Grid>
             <DataGrid
               rows={rows}
@@ -198,8 +189,8 @@ export default function Transfert() {
               rowSelectionModel={selectedRows}
             />
             <Grid container item justifyContent="center" xs={12} my={2}>
-              <MKButton type="submit" variant="gradient" color="dark" fullWidth>
-                Transférer
+              <MKButton type="submit" variant="gradient" color="success" fullWidth>
+                Vendu
               </MKButton>
             </Grid>
           </form>
