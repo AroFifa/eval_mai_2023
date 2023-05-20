@@ -6,6 +6,8 @@
 
 -- Extension
 CREATE EXTENSION pgcrypto;
+CREATE EXTENSION IF NOT EXISTS tablefunc;
+
 
 -- DOMAIN
 CREATE DOMAIN positive_int AS integer check(VALUE>=0);
@@ -149,7 +151,6 @@ CREATE TABLE Sale (
   qtt positive_int not null check(qtt>0) default 1,
   purchase_date date not null default CURRENT_DATE,
   purchase_price decimal_scale,
-  clientName varchar not null,
   store_id integer REFERENCES Store(id) not null
 );
 
@@ -243,3 +244,195 @@ FROM v_received r
   on r.laptop_id = l.id where r.qtt!=0;
 
 
+SELECT s.store_name AS "Store",
+       EXTRACT('month'from sa.purchase_date) AS "Month",
+       SUM(sa.qtt) AS "Total Sales",
+       SUM(sa.qtt * sa.purchase_price) AS "Total Price"
+FROM Sale sa
+INNER JOIN Store s ON sa.store_id = s.id
+GROUP BY s.store_name, "Month"
+ORDER BY s.store_name, "Month";
+
+SELECT s.store_name AS "Store",
+       EXTRACT('month'from sa.purchase_date) "month",
+       SUM(sa.qtt) AS "Total Sales",
+       SUM(sa.qtt * sa.purchase_price) AS "Total Price"
+FROM Sale sa
+INNER JOIN Store s ON sa.store_id = s.id
+GROUP BY s.store_name, "month";
+
+
+-- CREATE VIEW monthly_sales_view AS
+SELECT
+  s.store_name,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 1 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS jan,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 2 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS feb,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 3 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS mar,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 4 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS apr,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 5 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS may,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 6 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS jun,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 7 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS jul,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 8 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS aug,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 9 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS sep,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 10 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS oct,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 11 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS nov,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sa.purchase_date) = 12 THEN sa.qtt * sa.purchase_price ELSE 0 END) AS dec
+FROM
+  Sale sa
+  INNER JOIN Store s ON sa.store_id = s.id
+GROUP BY
+  s.store_name;
+
+
+
+-- stats
+
+
+CREATE OR REPLACE VIEW v_global_sales AS
+SELECT EXTRACT('month' from purchase_date) "month",EXTRACT('year' from purchase_date) "year",COALESCE(sum(purchase_price*qtt),0) total_price, COALESCE(sum(qtt),0) total_qtt
+from sale group by "year","month";
+
+
+CREATE OR REPLACE VIEW v_store_sales AS
+SELECT EXTRACT('month' from purchase_date) "month",EXTRACT('year' from purchase_date) "year",store_id,COALESCE(sum(purchase_price*qtt),0) total_price, COALESCE(sum(qtt),0) total_qtt
+from sale group by "year","month",store_id;
+
+
+CREATE OR REPLACE FUNCTION getStoreMonthSales(minYear integer,maxYear integer)
+RETURNS TABLE (
+  store_id integer,
+  month numeric,
+  total_price numeric,
+  total_qtt numeric
+)
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT v.store_id,v."month",sum(v.total_price) total_price,sum(v.total_qtt) total_qtt 
+  from v_store_sales v where v."year" BETWEEN COALESCE(minYear,'1980') AND COALESCE(maxYear,'2080') group by v."month",v.store_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION getGlobalMonthSales(minYear integer,maxYear integer)
+RETURNS TABLE (
+  month numeric,
+  total_price numeric,
+  total_qtt numeric
+)
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT v."month",sum(v.total_price) total_price,sum(v.total_qtt) total_qtt 
+  from v_global_sales v where v."year" BETWEEN COALESCE(minYear,'1980') AND COALESCE(maxYear,'2080') group by v."month";
+END;
+$$ LANGUAGE plpgsql;
+
+
+SELECT * from getGlobalMonthSales(2022,2023);
+
+SELECT * from getStoreMonthSales(null,null);
+
+
+CREATE TABLE Month (
+  month_number integer PRIMARY KEY,
+  month_name varchar(20) NOT NULL
+);
+
+INSERT INTO Month (month_number, month_name)
+VALUES
+  (1, 'Janvier'),
+  (2, 'Février'),
+  (3, 'Mars'),
+  (4, 'Avril'),
+  (5, 'Mai'),
+  (6, 'Juin'),
+  (7, 'Juillet'),
+  (8, 'Août'),
+  (9, 'Septembre'),
+  (10, 'Octobre'),
+  (11, 'Novembre'),
+  (12, 'Décembre');
+
+
+
+
+
+
+CREATE OR REPLACE FUNCTION getStoreMonthSalesByYear(min_year INTEGER, max_year INTEGER,value VARCHAR)
+RETURNS TABLE (
+  store_id INTEGER,
+  Janvier NUMERIC,
+  Février NUMERIC,
+  Mars NUMERIC,
+  Avril NUMERIC,
+  Mai NUMERIC,
+  Juin NUMERIC,
+  Juillet NUMERIC,
+  Août NUMERIC,
+  Septembre NUMERIC,
+  Octobre NUMERIC,
+  Novembre NUMERIC,
+  Décembre NUMERIC
+)
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT *
+  FROM crosstab(
+    format('SELECT s.id store_id, "month", COALESCE(%s, 0)
+            FROM store s
+            CROSS JOIN month m left join getStoreMonthSales(%s, %s) v ON s.id = v.store_id and m.month_number = v."month" ', value,
+            CASE WHEN min_year IS NULL THEN 'null' ELSE min_year::TEXT END,
+            CASE WHEN max_year IS NULL THEN 'null' ELSE max_year::TEXT END),
+    'SELECT month_number FROM month ORDER BY month_number'
+  ) AS (
+    store_id INTEGER,
+    Janvier NUMERIC,
+    Février NUMERIC,
+    Mars NUMERIC,
+    Avril NUMERIC,
+    Mai NUMERIC,
+    Juin NUMERIC,
+    Juillet NUMERIC,
+    Août NUMERIC,
+    Septembre NUMERIC,
+    Octobre NUMERIC,
+    Novembre NUMERIC,
+    Décembre NUMERIC
+  );
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * from getStoreMonthSalesByYear(null,null,'total_price') order by store_id;
+
+
+-- BENEFICE
+CREATE OR REPLACE VIEW v_input AS
+SELECT transaction_date,sum(price) input from mouvement where transaction_id=1 group by transaction_date;
+
+CREATE OR REPLACE VIEW v_output AS
+SELECT transaction_date,sum(price) output from mouvement where transaction_id=2 group by transaction_date;
+
+CREATE OR REPLACE VIEW v_mouvement AS
+SELECT COALESCE(i.transaction_date,o.transaction_date) transaction_date,input,output,input-output benefit from v_input i join v_output o 
+on i.transaction_date=o.transaction_date;
+
+CREATE OR REPLACE VIEW v_benefit_sales AS
+SELECT EXTRACT('month' from transaction_date) "month",EXTRACT('year' from transaction_date) "year",COALESCE(sum(benefit),0) benefit
+from v_mouvement group by "year","month";
+
+
+CREATE OR REPLACE FUNCTION getBenefitMonthSales(minYear integer,maxYear integer)
+RETURNS TABLE (
+  month numeric,
+  benefit numeric
+)
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT v."month",sum(v.benefit) benefit 
+  from v_benefit_sales v where v."year" BETWEEN COALESCE(minYear,'1980') AND COALESCE(maxYear,'2080') group by v."month";
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * from getBenefitMonthSales(null,null);

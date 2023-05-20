@@ -91,6 +91,11 @@ export default function ListLaptop() {
         }`,
     },
     {
+      field: "sales_price",
+      headerName: "Prix",
+      width: 200,
+    },
+    {
       field: "Update Link",
       headerName: "",
       renderCell: (params) => (
