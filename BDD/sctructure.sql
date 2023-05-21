@@ -410,4 +410,12 @@ SELECT store_id id,*  from getStoreMonthSalesByYear(null,null,'total_qtt') order
 SELECT month id,month ,benefit price , null qtt from getBenefitMonthSales(null,null);
 
 
-SELECT store_id id,* from getStoreMonthSalesByYear(1900,2080,'total_price') order by store_id
+SELECT store_id id,* from getStoreMonthSalesByYear(1900,2080,'total_price') order by store_id;
+
+
+
+-- Liste des ventes par point de ventes:
+select * from sale 
+where store_id=4 
+and purchase_price 
+between COALESCE(1500,0) AND COALESCE(8000000,CAST('infinity' AS bytea)); 

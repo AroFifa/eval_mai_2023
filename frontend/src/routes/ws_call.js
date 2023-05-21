@@ -583,3 +583,21 @@ export const getStats = async (minYear, maxYear, field, url) => {
 
   return data.data.content;
 };
+
+export const getSales = async (model_name, minPrice, maxPrice) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+
+  const response = await responseInit(
+    `http://localhost:8080/sales/store/${user.store.id}?model=${model_name}&min_price=${minPrice}&max_price=${maxPrice}`,
+    "GET",
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
