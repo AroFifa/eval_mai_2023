@@ -46,8 +46,6 @@ export default function EmployeeAffectation() {
       event.preventDefault();
       const value = event.target.value;
 
-      console.log(value);
-      console.log(params.row.id);
       affectEmployee(params.row.id, value);
     };
 
@@ -58,7 +56,7 @@ export default function EmployeeAffectation() {
         onChange={(event) => {
           affect(event, params);
         }}
-        defaultValue={params.row.store.id}
+        defaultValue={params.row.store?.id}
         fullWidth
         select
         placeholder="Points de vente"

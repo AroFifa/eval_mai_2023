@@ -117,6 +117,7 @@ INSERT INTO Profil (id, profil_name, profil_level) VALUES
 (2, 'Salesperson', 1);
 -- Insert data into Employee table
 INSERT INTO Employee (id, profil_id, firstname, lastname, birthday, email, passwd,store_id) VALUES
+-- (default, 2, 'Jack', 'Doe', '1989-03-01', 'jackdoe@example.com', crypt('indro', gen_salt('bf')),null),
 (1, 2, 'John', 'Doe', '1990-01-01', 'johndoe@example.com', crypt('password', gen_salt('bf')),null),
 (2, 2, 'Jane', 'Doe', '1985-05-05', 'janedoe@example.com', crypt('password', gen_salt('bf')),null),
 (3, 1, 'Admin', 'User', '1980-10-10', 'admin@example.com', crypt('password', gen_salt('bf')),1);

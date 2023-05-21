@@ -76,19 +76,13 @@ export default function ListLaptop() {
       field: "Ram",
       headerName: "Ram",
       width: 150,
-      valueGetter: (params) =>
-        `${params.row.model.ram.ram_name + "," || ""} ${
-          params.row.model.ram.ram_value + " Go" || ""
-        }`,
+      valueGetter: (params) => `${params.row.model.ram_size + " Go" || ""}`,
     },
     {
       field: "Disk",
       headerName: "Disque",
       width: 150,
-      valueGetter: (params) =>
-        `${params.row.model.disktype.type_name + "," || ""} ${
-          params.row.model.disk_size + " Go" || ""
-        }`,
+      valueGetter: (params) => `${params.row.model.disk_size + " Go" || ""}`,
     },
     {
       field: "sales_price",

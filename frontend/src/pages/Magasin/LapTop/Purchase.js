@@ -135,10 +135,9 @@ export default function Purchase() {
     id: item.id,
     brand_name: item.model.brand.brand_name,
     model_name: item.model.model_name,
-    screen_size: item.model.screen.size_name,
+    screen_size: item.model.screen_size,
     cpu_name: item.model.cpu.cpu_name,
-    ram_value: item.model.ram.ram_value,
-    disk_type: item.model.disktype.type_name,
+    ram_value: item.model.ram_size,
     disk_size: item.model.disk_size,
   }));
 
