@@ -1,7 +1,7 @@
 import MKBox from "components/MKBox";
 import SimpleFooter from "examples/Footers/SimpleFooter";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import point_ventes_routes from "routes/point_ventes";
 
@@ -9,18 +9,11 @@ export default function Home() {
   const user = JSON.parse(sessionStorage.getItem("user"));
 
   const navigate = useNavigate();
-  const [isRedirecting, setIsRedirecting] = useState(false);
   useEffect(() => {
     if (user === null || user.store.category.category_level !== 10) {
-      setIsRedirecting(true);
       navigate("/signin");
     }
   }, [user]);
-
-  if (isRedirecting) {
-    // Render nothing while the redirect is happening
-    return null;
-  }
   return (
     <>
       <DefaultNavbar

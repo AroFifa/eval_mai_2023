@@ -1,4 +1,4 @@
-import { Laptop, Logout, Category, Store } from "@mui/icons-material";
+import { Laptop, Logout, Category, Store, Dashboard } from "@mui/icons-material";
 import Home from "../pages/Magasin/Home";
 import SignOut from "pages/Authentication/Signout";
 import SaveLaptop from "pages/Magasin/LapTop/Save";
@@ -9,6 +9,9 @@ import Transfert from "pages/Magasin/LapTop/Transfert";
 import ListSalespoint from "pages/Magasin/Salespoint/List";
 import SaveSalespoint from "pages/Magasin/Salespoint/Save";
 import Reception from "pages/Magasin/Salespoint/Reception";
+import Global from "pages/Magasin/Stats/Global";
+import Profit from "pages/Magasin/Stats/Profit";
+import StatsStore from "pages/Magasin/Stats/Store";
 
 const magasin_routes = [
   {
@@ -199,6 +202,41 @@ const magasin_routes = [
       },
     ],
     key: 4,
+  },
+
+  {
+    name: "Statistique",
+    icon: <Dashboard />,
+    columns: 1,
+    rowsPerColumn: 2,
+    collapse: [
+      {
+        name: "Total des ventes par mois",
+        collapse: [
+          {
+            name: "Global",
+            route: "/magasin/stats/global",
+            component: <Global />,
+          },
+          {
+            name: "Par point de ventes",
+            route: "/magasin/stats/sstore",
+            component: <StatsStore />,
+          },
+        ],
+      },
+      {
+        name: "Bénéfice par mois",
+        collapse: [
+          {
+            name: "Bénéfice",
+            route: "/magasin/stats/profit",
+            component: <Profit />,
+          },
+        ],
+      },
+    ],
+    key: 6,
   },
   {
     name: "Logout",

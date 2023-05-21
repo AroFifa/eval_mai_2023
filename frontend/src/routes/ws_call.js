@@ -567,3 +567,19 @@ export const updateSalespoint = async (id, location_id, name) => {
 
   return data.data;
 };
+
+export const getStats = async (minYear, maxYear, field, url) => {
+  const response = await responseInit(
+    `http://localhost:8080/stats/${url}-sales?min=${minYear}&max=${maxYear}&field=${field}`,
+    "GET",
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
