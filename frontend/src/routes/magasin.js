@@ -1,5 +1,4 @@
 import { Laptop, Logout, Category, Store, Dashboard } from "@mui/icons-material";
-import Home from "../pages/Magasin/Home";
 import SignOut from "pages/Authentication/Signout";
 import SaveLaptop from "pages/Magasin/LapTop/Save";
 import ListLaptop from "pages/Magasin/LapTop/List";
@@ -12,6 +11,9 @@ import Reception from "pages/Magasin/Salespoint/Reception";
 import Global from "pages/Magasin/Stats/Global";
 import Profit from "pages/Magasin/Stats/Profit";
 import StatsStore from "pages/Magasin/Stats/Store";
+import SaveCpu from "pages/Magasin/Model/SaveCpu";
+import SaveBrand from "pages/Magasin/Model/SaveBrand";
+import SaveModel from "pages/Magasin/Model/SaveModel";
 
 const magasin_routes = [
   {
@@ -74,12 +76,7 @@ const magasin_routes = [
           {
             name: "Enregistrement",
             route: "/magasin/model/models/save",
-            component: <Home />,
-          },
-          {
-            name: "Listes",
-            route: "/magasin/model/models/list",
-            component: <Home />,
+            component: <SaveModel />,
           },
         ],
       },
@@ -90,12 +87,7 @@ const magasin_routes = [
           {
             name: "Enregistrement",
             route: "/magasin/model/brands/save",
-            component: <Home />,
-          },
-          {
-            name: "Listes",
-            route: "/magasin/model/brands/list",
-            component: <Home />,
+            component: <SaveBrand />,
           },
         ],
       },
@@ -106,63 +98,7 @@ const magasin_routes = [
           {
             name: "Enregistrement",
             route: "/magasin/model/cpus/save",
-            component: <Home />,
-          },
-          {
-            name: "Listes",
-            route: "/magasin/model/cpus/list",
-            component: <Home />,
-          },
-        ],
-      },
-
-      {
-        name: "Ecran",
-        dropdown: true,
-        collapse: [
-          {
-            name: "Enregistrement",
-            route: "/magasin/model/screens/save",
-            component: <Home />,
-          },
-          {
-            name: "Listes",
-            route: "/magasin/model/screens/list",
-            component: <Home />,
-          },
-        ],
-      },
-
-      {
-        name: "Ram",
-        dropdown: true,
-        collapse: [
-          {
-            name: "Enregistrement",
-            route: "/magasin/model/rams/save",
-            component: <Home />,
-          },
-          {
-            name: "Listes",
-            route: "/magasin/model/rams/list",
-            component: <Home />,
-          },
-        ],
-      },
-
-      {
-        name: "Disque",
-        dropdown: true,
-        collapse: [
-          {
-            name: "Enregistrement",
-            route: "/magasin/model/disks/save",
-            component: <Home />,
-          },
-          {
-            name: "Listes",
-            route: "/magasin/model/disks/list",
-            component: <Home />,
+            component: <SaveCpu />,
           },
         ],
       },

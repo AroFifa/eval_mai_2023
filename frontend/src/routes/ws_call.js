@@ -168,6 +168,18 @@ export const getBrands = async () => {
   return data.data.content;
 };
 
+export const getCpus = async () => {
+  const response = await responseInit("http://localhost:8080/cpus", "GET", null);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
 export const getLocations = async () => {
   const response = await responseInit("http://localhost:8080/locations", "GET", null);
 
@@ -597,6 +609,209 @@ export const getSales = async (model_name, minPrice, maxPrice) => {
 
   if (data.error in data) {
     throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const getModel = async (model_name) => {
+  var dataToSend = JSON.stringify({
+    model_name: model_name,
+  });
+
+  const response = await responseInit(
+    "http://localhost:8080/models/search",
+    "POST",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const getCpu = async (name) => {
+  var dataToSend = JSON.stringify({
+    cpu_name: name,
+  });
+
+  const response = await responseInit(
+    "http://localhost:8080/cpus/search",
+    "POST",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const searchBrands = async (name) => {
+  var dataToSend = JSON.stringify({
+    brand_name: name,
+  });
+
+  const response = await responseInit(
+    "http://localhost:8080/brands/search",
+    "POST",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const saveModel = async (brand_id, name, cpu_id, screen, ram, disk) => {
+  var dataToSend = JSON.stringify({
+    brand: { id: brand_id },
+    model_name: name,
+    cpu: { id: cpu_id },
+    screen_size: screen,
+    ram_size: ram,
+    disk_size: disk,
+  });
+
+  const response = await responseInit("http://localhost:8080/models", "POST", null, dataToSend);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("Nom du modèle déja existant");
+  }
+
+  return data.data.content;
+};
+
+export const saveCPU = async (cpu_name) => {
+  var dataToSend = JSON.stringify({
+    cpu_name: cpu_name,
+  });
+
+  const response = await responseInit("http://localhost:8080/cpus", "POST", null, dataToSend);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("processeur déja existant");
+  }
+
+  return data.data.content;
+};
+
+export const saveBrand = async (brand_name) => {
+  var dataToSend = JSON.stringify({
+    brand_name: brand_name,
+  });
+
+  const response = await responseInit("http://localhost:8080/brands", "POST", null, dataToSend);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("Marque déja existant");
+  }
+
+  return data.data.content;
+};
+
+export const updateModel = async (id, brand_id, name, cpu_id, screen, ram, disk) => {
+  var dataToSend = JSON.stringify({
+    brand: { id: brand_id },
+    model_name: name,
+    cpu: { id: cpu_id },
+    screen_size: screen,
+    ram_size: ram,
+    disk_size: disk,
+  });
+
+  const response = await responseInit(
+    `http://localhost:8080/models/${id}`,
+    "PUT",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("Nom du modèle déja existant");
+  }
+
+  return data.data.content;
+};
+
+export const updateCpus = async (id, name) => {
+  var dataToSend = JSON.stringify({
+    cpu_name: name,
+  });
+
+  const response = await responseInit(`http://localhost:8080/cpus/${id}`, "PUT", null, dataToSend);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("processeur déja existant");
+  }
+
+  return data.data.content;
+};
+
+export const updateBrand = async (id, name) => {
+  var dataToSend = JSON.stringify({
+    brand_name: name,
+  });
+
+  const response = await responseInit(
+    `http://localhost:8080/brands/${id}`,
+    "PUT",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  if (response.status === 500) {
+    throw new Error("Marque déja existant");
   }
 
   return data.data.content;

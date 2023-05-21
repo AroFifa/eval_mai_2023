@@ -1,8 +1,8 @@
 -- DATABASES
 -- \c postgres
 -- DROP DATABASE eval_mai_2023;
--- CREATE DATABASE eval_mai_2023;
--- \c eval_mai_2023
+-- CREATE DATABASE eval_v2;
+-- \c eval_v2;
 
 -- Extension
 CREATE EXTENSION pgcrypto;
@@ -24,39 +24,22 @@ CREATE TABLE Cpu (
   cpu_name varchar unique not null
 );
 
-CREATE TABLE DiskType (
-  id SERIAL PRIMARY KEY,
-  type_name varchar unique not null
-);
-
-CREATE TABLE Ram (
-  id SERIAL PRIMARY KEY,
-  ram_name varchar not null,
-  ram_value positive_int  not null,
-  unique (ram_name,ram_value)
-);
-
-CREATE TABLE Screen (
-  id SERIAL PRIMARY KEY,
-  size_name varchar unique not null,
-  size_value decimal_scale not null
-);
 
 CREATE TABLE Model (
   id SERIAL PRIMARY KEY,
   brand_id integer REFERENCES Brand(id) not null,
   model_name varchar unique not null,
-  screen_id integer REFERENCES Screen(id) not null,
   cpu_id integer REFERENCES Cpu(id) not null,
-  ram_id integer REFERENCES Ram(id) not null,
-  disktype_id integer REFERENCES DiskType(id) not null,
-  disk_size positive_int not null not null
+  screen_size decimal_scale not null,
+  ram_size positive_int not null,
+  disk_size positive_int not null 
 );
 
 CREATE TABLE LapTop (
   id SERIAL PRIMARY KEY,
   model_id integer REFERENCES Model(id) not null,
-  sales_price decimal_scale
+  sales_price decimal_scale,
+  unique(model_id)
 );
 
 CREATE TABLE StoreCategory (
@@ -162,18 +145,15 @@ CREATE TABLE Mouvement (
 );
 
 -- VIEW
-CREATE OR REPLACE VIEW V_laptop_search AS 
-SELECT l.*,m.model_name,m.brand_id,m.brand_name,m.cpu_name,m.ram_name,m.type_name from Laptop l join v_model_tmp m on l.model_id = m.id;
 
 CREATE OR REPLACE VIEW V_model_tmp AS
-SELECT m.*,b.brand_name,cpu.cpu_name,r.ram_name,d.type_name from Model m
+SELECT m.*,b.brand_name,cpu.cpu_name from Model m
 join Brand b on m.brand_id = b.id 
-join Cpu on m.cpu_id = cpu.id
-join Ram r on m.ram_id = r.id
-join Disktype d on m.disktype_id = d.id;
+join Cpu on m.cpu_id = cpu.id;
 
--- CONSTRAINT
-ALTER TABLE laptop ADD CONSTRAINT model_uniquekey UNIQUE (model_id);
+CREATE OR REPLACE VIEW V_laptop_search AS 
+SELECT l.*,m.model_name,m.brand_id,m.brand_name,m.cpu_name,m.ram_size,m.disk_size,m.screen_size
+from Laptop l join v_model_tmp m on l.model_id = m.id;
 
 -- VIEW 
 CREATE OR REPLACE VIEW V_etat_stock_in AS
@@ -201,7 +181,7 @@ FULL JOIN
     V_etat_stock_out AS sout ON sin.laptop_id = sout.laptop_id AND sin.store_id = sout.store_id;
 
 CREATE OR REPLACE VIEW V_etat_stock_search as 
-SELECT s.*, l.model_name,l.brand_id,l.brand_name,l.cpu_name,l.ram_name,l.type_name from V_etat_stock s join v_laptop_search l  
+SELECT s.*, l.model_name,l.brand_id,l.brand_name,l.cpu_name,l.ram_size,l.disk_size from V_etat_stock s join v_laptop_search l  
 on s.laptop_id =  l.id;
 
 
@@ -418,4 +398,5 @@ SELECT store_id id,* from getStoreMonthSalesByYear(1900,2080,'total_price') orde
 select * from sale 
 where store_id=4 
 and purchase_price 
-between COALESCE(1500,0) AND COALESCE(8000000,CAST('infinity' AS bytea)); 
+between COALESCE(1500,0) AND COALESCE(8000000,CAST('infinity' AS numeric)); 
+
