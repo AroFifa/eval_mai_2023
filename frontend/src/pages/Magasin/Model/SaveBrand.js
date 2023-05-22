@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // @mui material components
 import Container from "@mui/material/Container";
@@ -16,8 +16,24 @@ import MKInput from "components/MKInput";
 import { DataGrid } from "@mui/x-data-grid";
 import { searchBrands } from "routes/ws_call";
 import { saveBrand } from "routes/ws_call";
+import { Alert, Snackbar } from "@mui/material";
+import { updateBrand } from "routes/ws_call";
 
 export default function SaveBrand() {
+  const [snackbar, setSnackbar] = useState(null);
+
+  const handleCloseSnackbar = () => setSnackbar(null);
+  const processRowUpdate = useCallback(async (newRow) => {
+    // Make the HTTP request to save in the backend
+    const response = await updateBrand(newRow.id, newRow.brand_name);
+    setSnackbar({ children: "Marque modifié", severity: "success" });
+    return response;
+  }, []);
+
+  const handleProcessRowUpdateError = useCallback((error) => {
+    setSnackbar({ children: error.message, severity: "error" });
+  }, []);
+
   const inputRef = useRef();
   const q = useRef();
   const [data, setData] = useState([]);
@@ -35,7 +51,6 @@ export default function SaveBrand() {
     fetchData();
   }, []);
 
-  console.log(data);
   function handleSearch() {
     fetchData();
   }
@@ -56,7 +71,7 @@ export default function SaveBrand() {
       });
   };
 
-  const columns = [{ field: "brand_name", headerName: "Marque", width: 300 }];
+  const columns = [{ field: "brand_name", headerName: "Marque", width: 300, editable: true }];
 
   return (
     <>
@@ -104,7 +119,22 @@ export default function SaveBrand() {
                 fullWidth
                 onChange={handleSearch}
               />
-              <DataGrid rows={data} columns={columns} />
+              <DataGrid
+                rows={data}
+                columns={columns}
+                processRowUpdate={processRowUpdate}
+                onProcessRowUpdateError={handleProcessRowUpdateError}
+              />
+              {!!snackbar && (
+                <Snackbar
+                  open
+                  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                  onClose={handleCloseSnackbar}
+                  autoHideDuration={6000}
+                >
+                  <Alert {...snackbar} onClose={handleCloseSnackbar} />
+                </Snackbar>
+              )}
             </Grid>
           </Grid>
         </Container>

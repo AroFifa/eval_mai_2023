@@ -88,6 +88,14 @@ export default function Profit() {
       },
     },
     {
+      field: "commission",
+      headerName: "Commission",
+      width: 200,
+      renderCell: (params) => {
+        return format(params.value);
+      },
+    },
+    {
       field: "profit",
       headerName: "Bénéfice",
       width: 200,
@@ -102,6 +110,7 @@ export default function Profit() {
     sale: item.sale,
     purchase: item.purchase,
     loss: item.loss,
+    commission: item.commission,
     profit: item.profit,
   }));
 
@@ -148,6 +157,7 @@ export default function Profit() {
                   <BarSeries name="Vente" valueField="sale" argumentField="month_name" />
                   <BarSeries name="Achat" valueField="purchase" argumentField="month_name" />
                   <BarSeries name="Perte" valueField="loss" argumentField="month_name" />
+                  <BarSeries name="Commission" valueField="commission" argumentField="month_name" />
                   <Legend />
                   <EventTracker />
                   <HoverState />

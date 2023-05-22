@@ -789,7 +789,7 @@ export const updateCpus = async (id, name) => {
     throw new Error("processeur déja existant");
   }
 
-  return data.data.content;
+  return data.data;
 };
 
 export const updateBrand = async (id, name) => {
@@ -814,5 +814,5 @@ export const updateBrand = async (id, name) => {
     throw new Error("Marque déja existant");
   }
 
-  return data.data.content;
+  return data.data;
 };

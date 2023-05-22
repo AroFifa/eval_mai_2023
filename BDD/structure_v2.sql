@@ -395,3 +395,95 @@ between COALESCE(1500,0) AND COALESCE(8000000,CAST('infinity' AS numeric));
 
 -- pg_dump -U postgres -d eval_v3 -f backup.sql
 
+
+
+CREATE TABLE Commission_level (
+  id SERIAL PRIMARY KEY,
+  min decimal_scale null,
+  max decimal_scale null check(max>min or max is null),
+  commission decimal_scale not null
+);
+
+INSERT INTO Commission_level (min,max,commission) VALUES
+(0,2000000,3),
+(2000001,5000000,8),
+(5000001,300000000,15);
+
+CREATE OR REPLACE VIEW v_sales_store_tmp as
+SELECT store_id,EXTRACT('month' from transaction_date) "month",EXTRACT('year' from transaction_date) "year",
+COALESCE(sum(sale),0) sale
+from v_mouvement_tmp group by "year","month",store_id;
+
+-- SELECT
+--   SUM(
+--     CASE
+--       WHEN amount <= max THEN (amount - LEAST(amount, min)) * commission / 100
+--       ELSE (max - LEAST(max, min)) * commission / 100
+--     END
+--   )::numeric AS commission_amount
+-- FROM commission_level, (VALUES (55000000.00)) AS t(amount)
+-- WHERE amount >= min;
+
+
+CREATE OR REPLACE FUNCTION getCommissionAmount(price numeric)
+RETURNS TABLE (
+  commission_amount numeric
+)
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+  SUM(
+    CASE
+      WHEN amount <= max THEN (amount - LEAST(amount, min)) * commission / 100
+      ELSE (max - LEAST(max, min)) * commission / 100
+    END
+  ) AS commission_amount
+  FROM commission_level, (VALUES (price)) AS t(amount)
+  WHERE amount >= min;
+END;
+$$ LANGUAGE plpgsql;
+
+
+SELECT getCommissionAmount(55000000);
+
+
+CREATE OR REPLACE VIEW v_sales_store as
+SELECT *,getCommissionAmount(sale) commission from v_sales_store_tmp
+
+CREATE OR REPLACE VIEW v_monthly_sales_store AS
+SELECT "year","month",COALESCE(sum(sale),0) sale, COALESCE(sum(commission),0) commission from v_sales_store
+group by "year","month";
+
+CREATE OR REPLACE VIEW v_monthly_mvt AS
+SELECT v."month",v."year",
+v.sale,v.purchase,v.transfer,v.reception,v.transfer-v.reception loss,s.commission,v.sale + v.reception- (v.purchase+v.transfer+s.commission) profit
+from v_monthly_mvt_tmp v join v_monthly_sales_store s on v.month=s.month and v.year = s.year;
+
+
+CREATE OR REPLACE VIEW v_profit_sales AS
+SELECT m.month_number::numeric "month",s.year,s.sale,s.purchase,s.loss,s.commission,s.profit from month m left join v_monthly_mvt s on m.month_number = s.month;
+
+CREATE OR REPLACE FUNCTION getprofitMonthSales(minYear integer,maxYear integer)
+RETURNS TABLE (
+  month numeric,
+  sale numeric,
+  purchase numeric,
+  loss numeric,
+  commission numeric,
+  profit numeric
+)
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT v."month",
+  sum(v.sale) sale,
+  sum(v.purchase) purchase,
+  sum(v.loss) loss,
+  sum(v.commission) commission,
+  sum(v.profit) profit
+  from v_profit_sales v where v."year" is null or v."year" BETWEEN COALESCE(minYear,'1980') AND COALESCE(maxYear,'2080') group by v."month";
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT month id,month , sale, purchase, loss ,commission, profit from getprofitMonthSales(null,null);

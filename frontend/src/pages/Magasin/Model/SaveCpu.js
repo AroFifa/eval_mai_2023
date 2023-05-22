@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // @mui material components
 import Container from "@mui/material/Container";
@@ -16,8 +16,24 @@ import MKInput from "components/MKInput";
 import { saveCPU } from "routes/ws_call";
 import { getCpu } from "routes/ws_call";
 import { DataGrid } from "@mui/x-data-grid";
+import { updateCpus } from "routes/ws_call";
+import { Alert, Snackbar } from "@mui/material";
 
 export default function SaveCpu() {
+  const [snackbar, setSnackbar] = useState(null);
+
+  const handleCloseSnackbar = () => setSnackbar(null);
+  const processRowUpdate = useCallback(async (newRow) => {
+    // Make the HTTP request to save in the backend
+    const response = await updateCpus(newRow.id, newRow.cpu_name);
+    setSnackbar({ children: "Processeur modifié", severity: "success" });
+    return response;
+  }, []);
+
+  const handleProcessRowUpdateError = useCallback((error) => {
+    setSnackbar({ children: error.message, severity: "error" });
+  }, []);
+
   const inputRef = useRef();
   const q = useRef();
   const [data, setData] = useState([]);
@@ -56,7 +72,7 @@ export default function SaveCpu() {
       });
   };
 
-  const columns = [{ field: "cpu_name", headerName: "Processeur", width: 300 }];
+  const columns = [{ field: "cpu_name", headerName: "Processeur", width: 300, editable: true }];
 
   return (
     <>
@@ -104,7 +120,22 @@ export default function SaveCpu() {
                 fullWidth
                 onChange={handleSearch}
               />
-              <DataGrid rows={data} columns={columns} />
+              <DataGrid
+                rows={data}
+                columns={columns}
+                processRowUpdate={processRowUpdate}
+                onProcessRowUpdateError={handleProcessRowUpdateError}
+              />
+              {!!snackbar && (
+                <Snackbar
+                  open
+                  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                  onClose={handleCloseSnackbar}
+                  autoHideDuration={6000}
+                >
+                  <Alert {...snackbar} onClose={handleCloseSnackbar} />
+                </Snackbar>
+              )}
             </Grid>
           </Grid>
         </Container>
