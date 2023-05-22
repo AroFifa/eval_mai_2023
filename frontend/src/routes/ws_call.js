@@ -845,6 +845,18 @@ export const getCommissions = async () => {
   return data.data.content;
 };
 
+export const getMonths = async () => {
+  const response = await responseInit(`http://localhost:8080/months`, "GET", null);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
 export const updateCommission = async (id, min, max, commission) => {
   var dataToSend = JSON.stringify({
     min: min,
@@ -893,4 +905,21 @@ export const saveCommissions = async (min, max, commission) => {
   }
 
   return data.data.content;
+};
+
+export const delCommission = async (id) => {
+  const response = await responseInit(
+    `http://localhost:8080/commissions/${id}`,
+    "DELETE",
+    null,
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data;
 };

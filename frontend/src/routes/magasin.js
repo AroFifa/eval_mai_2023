@@ -15,6 +15,7 @@ import SaveCpu from "pages/Magasin/Model/SaveCpu";
 import SaveBrand from "pages/Magasin/Model/SaveBrand";
 import SaveModel from "pages/Magasin/Model/SaveModel";
 import Commission from "pages/Magasin/Stats/Commission";
+import StoreCommission from "pages/Magasin/Stats/StoreCommission";
 
 const magasin_routes = [
   {
@@ -173,7 +174,7 @@ const magasin_routes = [
           {
             name: "Par point de vente",
             route: "/magasin/commissions/store",
-            component: <Profit />,
+            component: <StoreCommission />,
           },
           {
             name: "Palier",

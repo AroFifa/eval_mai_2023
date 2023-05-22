@@ -14,10 +14,12 @@ import SimpleFooter from "examples/Footers/SimpleFooter";
 import MKAlert from "components/MKAlert";
 import MKInput from "components/MKInput";
 import { DataGrid } from "@mui/x-data-grid";
-import { Alert, Snackbar } from "@mui/material";
+import { Alert, IconButton, Snackbar } from "@mui/material";
 import { updateCommission } from "routes/ws_call";
 import { getCommissions } from "routes/ws_call";
 import { saveCommissions } from "routes/ws_call";
+import { Delete } from "@mui/icons-material";
+import { delCommission } from "routes/ws_call";
 
 export default function Commission() {
   const [snackbar, setSnackbar] = useState(null);
@@ -70,10 +72,36 @@ export default function Commission() {
       });
   };
 
+  const handleClick = (
+    event,
+    params // GridRowParams
+  ) => {
+    event.preventDefault();
+
+    delCommission(params.row.id)
+      .then(() => {
+        fetchData();
+      })
+      .catch((e) => {
+        setError(e.message);
+      });
+  };
+
   const columns = [
     { field: "min", headerName: "Total min", width: 300, editable: true },
     { field: "max", headerName: "Total max", width: 300, editable: true },
     { field: "commission", headerName: "Commission (%)", width: 150, editable: true },
+    {
+      field: "Delete Link",
+      headerName: "",
+      renderCell: (params) => (
+        // How can I send props to the component in the link, I wanna send the data where id = params.row.id so taht I don"t to call a WS
+
+        <IconButton onClick={(event) => handleClick(event, params)}>
+          <Delete />
+        </IconButton>
+      ),
+    },
   ];
 
   return (
