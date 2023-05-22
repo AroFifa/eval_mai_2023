@@ -39,14 +39,7 @@ export default function Sale() {
   };
 
   function handleSearch() {
-    searchStocks(q.current.value)
-      .then((data) => {
-        setStocks(data);
-      })
-      .catch((error) => {
-        // Handle any potential errors from the Promise
-        console.error(error);
-      });
+    fetchData();
   }
 
   useEffect(() => {
@@ -54,7 +47,7 @@ export default function Sale() {
   }, []);
 
   const handleSales = async (event) => {
-    event.preventDefault;
+    event.preventDefault();
 
     const transferItems = selectedRows.map((row) => ({
       laptop_id: row,
@@ -62,7 +55,9 @@ export default function Sale() {
     }));
 
     await saleLaptops(dateRef.current.value, transferItems)
-      .then(() => {})
+      .then(() => {
+        fetchData();
+      })
       .catch((e) => {
         setError(e.message);
       });

@@ -26,6 +26,8 @@ export default function Reception() {
 
   const [error, setError] = useState("");
   const qttRef = useRef([]);
+  const dateRef = useRef();
+
   const q = useRef();
   const isTransfer = user.store.id === 1 ? true : false;
 
@@ -43,29 +45,21 @@ export default function Reception() {
   }, []);
 
   function handleSearch() {
-    filterReception(q.current.value)
-      .then((data) => {
-        setReceptions(data);
-      })
-      .catch((error) => {
-        // Handle any potential errors from the Promise
-        console.error(error);
-      });
+    fetchData();
   }
 
   // console.log(receptions);
+  const today = new Date().toISOString().split("T")[0];
 
   const handleReceive = async (event) => {
-    event.preventDefault;
-
-    const today = new Date().toISOString().split("T")[0];
+    event.preventDefault();
 
     const transferItems = selectedRows.map((row) => ({
       laptop_id: row,
       qtt: qttRef.current[row].value,
     }));
 
-    await receiveLaptops(isTransfer, today, transferItems)
+    await receiveLaptops(isTransfer, dateRef.current.value, transferItems)
       .then(() => {
         navigate("/point_vente/transfers/central");
       })
@@ -140,6 +134,20 @@ export default function Reception() {
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
           <form type="submit" onSubmit={(event) => handleReceive(event)}>
             {" "}
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <MKInput
+                  variant="standard"
+                  label="Date"
+                  type="date"
+                  defaultValue={today}
+                  fullWidth
+                  inputRef={dateRef}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+            </Grid>
             <DataGrid
               rows={rows}
               columns={columns}

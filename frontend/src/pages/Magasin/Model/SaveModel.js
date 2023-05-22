@@ -156,18 +156,6 @@ export default function SaveModel() {
                   <Grid item xs={12} md={8}>
                     <MKInput
                       variant="standard"
-                      label="Ecran"
-                      type="number"
-                      inputRef={screenRef}
-                      placeholder="pouce"
-                      fullWidth
-                      required
-                      InputProps={{ inputProps: { min: 0, step: "any" } }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={8}>
-                    <MKInput
-                      variant="standard"
                       label="Ram"
                       type="number"
                       inputRef={ramRef}
@@ -187,6 +175,18 @@ export default function SaveModel() {
                       placeholder="Go"
                       fullWidth
                       required
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={8}>
+                    <MKInput
+                      variant="standard"
+                      label="Ecran"
+                      type="number"
+                      inputRef={screenRef}
+                      placeholder="pouce"
+                      fullWidth
+                      required
+                      InputProps={{ inputProps: { min: 0, step: "any" } }}
                     />
                   </Grid>
 

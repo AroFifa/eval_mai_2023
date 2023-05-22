@@ -1,8 +1,8 @@
 -- DATABASES
 -- \c postgres
 -- DROP DATABASE eval_mai_2023;
--- CREATE DATABASE eval_v2;
--- \c eval_v2;
+-- CREATE DATABASE eval_v3;
+-- \c eval_v3;
 
 -- Extension
 CREATE EXTENSION pgcrypto;
@@ -91,8 +91,8 @@ CREATE TABLE Stock (
   transaction_date date not null default CURRENT_DATE,
   store_id integer REFERENCES Store(id) not null,
   laptop_id integer REFERENCES LapTop(id) not null,
-  qtt_in positive_int not null check(qtt_in>=0) default 1,
-  qtt_out positive_int not null check(qtt_out>=0) default 1
+  qtt_in positive_int not null check(qtt_in>=0) default 0,
+  qtt_out positive_int not null check(qtt_out>=0) default 0
 
 );
 
@@ -133,10 +133,10 @@ CREATE TABLE Sale (
 
 CREATE TABLE Mouvement (
   id SERIAL PRIMARY KEY,
-  sale decimal_scale not null,
-  purchase decimal_scale not null,
-  transfer decimal_scale not null,
-  reception decimal_scale not null,
+  sale decimal_scale not null default 0,
+  purchase decimal_scale not null  default 0,
+  transfer decimal_scale not null  default 0,
+  reception decimal_scale not null  default 0,
   store_id integer REFERENCES Store(id),
   transaction_date date not null default CURRENT_DATE
 );
@@ -146,22 +146,6 @@ CREATE TABLE Month (
   month_number integer PRIMARY KEY,
   month_name varchar(20) NOT NULL
 );
-
-INSERT INTO Month (month_number, month_name)
-VALUES
-  (1, 'Janvier'),
-  (2, 'Février'),
-  (3, 'Mars'),
-  (4, 'Avril'),
-  (5, 'Mai'),
-  (6, 'Juin'),
-  (7, 'Juillet'),
-  (8, 'Août'),
-  (9, 'Septembre'),
-  (10, 'Octobre'),
-  (11, 'Novembre'),
-  (12, 'Décembre');
-
 
 -- VIEW
 
@@ -190,7 +174,7 @@ CREATE OR REPLACE VIEW V_etat_stock AS
     laptop_id AS id,
     laptop_id,
     store_id,
-    COALESCE(sum(qtt),0)
+    COALESCE(sum(qtt),0) qtt
 FROM v_etat_stock_tmp group by laptop_id,store_id;
 
 CREATE OR REPLACE VIEW V_etat_stock_search as 
@@ -360,7 +344,7 @@ from v_mouvement group by "year","month";
 
 CREATE OR REPLACE VIEW v_monthly_mvt AS
 SELECT "month","year",
-sale,purchase,transfer,reception,transfer-reception loss, sale + reception- (purchase-transfer) profit
+sale,purchase,transfer,reception,transfer-reception loss, sale + reception- (purchase+transfer) profit
 from v_monthly_mvt_tmp;
 
 
@@ -395,7 +379,7 @@ SELECT month id,month,total_price price,total_qtt qtt from getGlobalMonthSales(n
 SELECT store_id id,* from getStoreMonthSalesByYear(null,null,'total_price') order by store_id;
 SELECT store_id id,*  from getStoreMonthSalesByYear(null,null,'total_qtt') order by store_id;
 -- *bénéfice par mois
-SELECT month id,month ,profit price , null qtt from getprofitMonthSales(null,null);
+SELECT month id,month , sale, purchase, loss , profit from getprofitMonthSales(null,null);
 
 
 SELECT store_id id,* from getStoreMonthSalesByYear(1900,2080,'total_price') order by store_id;
@@ -407,4 +391,7 @@ select * from sale
 where store_id=4 
 and purchase_price 
 between COALESCE(1500,0) AND COALESCE(8000000,CAST('infinity' AS numeric)); 
+
+
+-- pg_dump -U postgres -d eval_v3 -f backup.sql
 

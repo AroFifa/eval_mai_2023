@@ -492,8 +492,8 @@ export const saleLaptops = async (date, transferItems) => {
     isTransfer: false,
   });
 
-  console.log(dataToSend);
-  alert("BREAK");
+  // console.log(dataToSend);
+  // alert("BREAK");
   const response = await responseInit(
     "http://localhost:8080/stockstatus/sold",
     "POST",

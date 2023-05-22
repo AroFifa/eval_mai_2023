@@ -64,8 +64,32 @@ export default function Profit() {
   const columns = [
     { field: "month_name", headerName: "Mois", width: 150 },
     {
-      field: "price",
-      headerName: "Prix total",
+      field: "sale",
+      headerName: "Vente",
+      width: 200,
+      renderCell: (params) => {
+        return format(params.value);
+      },
+    },
+    {
+      field: "purchase",
+      headerName: "Achat",
+      width: 200,
+      renderCell: (params) => {
+        return format(params.value);
+      },
+    },
+    {
+      field: "loss",
+      headerName: "Perte",
+      width: 200,
+      renderCell: (params) => {
+        return format(params.value);
+      },
+    },
+    {
+      field: "profit",
+      headerName: "Bénéfice",
       width: 200,
       renderCell: (params) => {
         return format(params.value);
@@ -75,8 +99,10 @@ export default function Profit() {
   const rows = data.map((item) => ({
     id: item.id,
     month_name: item.month.month_name,
-    price: item.price,
-    qtt: item.qtt,
+    sale: item.sale,
+    purchase: item.purchase,
+    loss: item.loss,
+    profit: item.profit,
   }));
 
   return (
@@ -118,7 +144,10 @@ export default function Profit() {
                   <Title text="Bénéfice par mois" />
                   <ArgumentAxis />
                   <ValueAxis />
-                  <BarSeries name="prix" valueField="price" argumentField="month_name" />
+                  <BarSeries name="Bénéfice" valueField="profit" argumentField="month_name" />
+                  <BarSeries name="Vente" valueField="sale" argumentField="month_name" />
+                  <BarSeries name="Achat" valueField="purchase" argumentField="month_name" />
+                  <BarSeries name="Perte" valueField="loss" argumentField="month_name" />
                   <Legend />
                   <EventTracker />
                   <HoverState />
@@ -127,7 +156,7 @@ export default function Profit() {
                 </Chart>
               </Paper>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={12}>
               <DataGrid
                 slots={{ toolbar: CustomToolbar }}
                 rows={rows}

@@ -49,14 +49,7 @@ export default function Transfert() {
   };
 
   function handleSearch() {
-    searchStocks(q.current.value)
-      .then((data) => {
-        setStocks(data);
-      })
-      .catch((error) => {
-        // Handle any potential errors from the Promise
-        console.error(error);
-      });
+    fetchData();
   }
 
   useEffect(() => {
@@ -79,7 +72,7 @@ export default function Transfert() {
   };
 
   const handleTransfer = async (event) => {
-    event.preventDefault;
+    event.preventDefault();
 
     const transferItems = selectedRows.map((row) => ({
       laptop_id: row,
@@ -87,7 +80,9 @@ export default function Transfert() {
     }));
 
     await sendLaptops(isTransfer, dateRef.current.value, storeRef.current.value, transferItems)
-      .then(() => {})
+      .then(() => {
+        fetchData();
+      })
       .catch((e) => {
         setError(e.message);
       });
