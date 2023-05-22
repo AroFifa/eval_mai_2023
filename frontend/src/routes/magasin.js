@@ -14,6 +14,7 @@ import StatsStore from "pages/Magasin/Stats/Store";
 import SaveCpu from "pages/Magasin/Model/SaveCpu";
 import SaveBrand from "pages/Magasin/Model/SaveBrand";
 import SaveModel from "pages/Magasin/Model/SaveModel";
+import Commission from "pages/Magasin/Stats/Commission";
 
 const magasin_routes = [
   {
@@ -162,12 +163,22 @@ const magasin_routes = [
         ],
       },
       {
-        name: "Bénéfice par mois",
+        name: "Commission",
         collapse: [
           {
-            name: "Bénéfice",
+            name: "Bénéfice mensuel",
             route: "/magasin/stats/profit",
             component: <Profit />,
+          },
+          {
+            name: "Par point de vente",
+            route: "/magasin/commissions/store",
+            component: <Profit />,
+          },
+          {
+            name: "Palier",
+            route: "/magasin/commissions/level",
+            component: <Commission />,
           },
         ],
       },

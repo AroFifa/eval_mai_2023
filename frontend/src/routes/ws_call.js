@@ -816,3 +816,81 @@ export const updateBrand = async (id, name) => {
 
   return data.data;
 };
+
+export const getStoreCommissions = async (month, year) => {
+  const response = await responseInit(
+    `http://localhost:8080/commissions/store-commissions?monthId=${month}&year=${year}`,
+    "GET",
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const getCommissions = async () => {
+  const response = await responseInit(`http://localhost:8080/commissions`, "GET", null);
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
+export const updateCommission = async (id, min, max, commission) => {
+  var dataToSend = JSON.stringify({
+    min: min,
+    max: max,
+    commission: commission,
+  });
+
+  const response = await responseInit(
+    `http://localhost:8080/commissions/${id}`,
+    "PUT",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  // if (response.status === 500) {
+  //   throw new Error("processeur déja existant");
+  // }
+
+  return data.data;
+};
+
+export const saveCommissions = async (min, max, commission) => {
+  var dataToSend = JSON.stringify({
+    min: min,
+    max: max,
+    commission: commission,
+  });
+
+  const response = await responseInit(
+    "http://localhost:8080/commissions",
+    "POST",
+    null,
+    dataToSend
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};

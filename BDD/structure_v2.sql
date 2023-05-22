@@ -487,3 +487,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 SELECT month id,month , sale, purchase, loss ,commission, profit from getprofitMonthSales(null,null);
+
+
+CREATE OR REPLACE VIEW v_store_commission AS
+SELECT store_id,month,year,COALESCE(sale,0) sale,COALESCE(commission,0) commission
+from v_sales_store v ;
