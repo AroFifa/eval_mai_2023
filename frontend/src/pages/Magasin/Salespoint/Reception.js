@@ -55,7 +55,7 @@ export default function Reception() {
     event.preventDefault();
 
     const transferItems = selectedRows.map((row) => ({
-      laptop_id: row,
+      item_id: row,
       qtt: qttRef.current[row].value,
     }));
 
@@ -94,7 +94,7 @@ export default function Reception() {
     { field: "model_name", headerName: "Model", width: 300 },
     {
       field: "qtt",
-      headerName: "Envoyé ",
+      headerName: "Reçus ",
     },
     {
       field: "qttinput",

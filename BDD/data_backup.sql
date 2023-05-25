@@ -62,4 +62,3 @@ VALUES
   (10, 'Octobre'),
   (11, 'Novembre'),
   (12, 'Décembre');
-

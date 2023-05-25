@@ -1,0 +1,36 @@
+- Modifier Tables:
+	- Stock:
+		- ajouter colonne: prix
+	- Transfer:
+		- supprimer colonne: laptop_id
+		- ajouter colonne: stock_id
+	
+- Modifier classes:
+	- Stock:
+		- ajouter prix
+			- fromTransfer(...)
+			- fromReception(...)
+			- fromSale(...)
+	- Transfer
+	
+- Créer vues V_stock_totransfer
+	
+- Modifier fonctions:
+	- VetatstockController.find(q,store_id,pageable):
+		- utiliser vue v_stock_totransfer -> Stock
+		
+	- TransferItem.getTransferFromMain(date,emp,store)
+	- TransferItem.getTransferToMain(date,emp,store)
+	
+	- Mouvement.fromTransfer(transfer)
+	- Mouvement.fromReceipt(reception)
+		
+	- TransferService.send(repo,transferItemData):
+
+- Modifier pages:
+	- Transfer:
+		- searchStocks -> getStocksToTransfer
+		- colonnes à afficher: 
+			- modifier les noms des colonnes
+			- ajouter prix
+			

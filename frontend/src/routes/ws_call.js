@@ -418,6 +418,24 @@ export const purchaseLaptops = async (date, purchaseItems) => {
   return data.data;
 };
 
+export const getStockToTransfer = async (q) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+
+  const response = await responseInit(
+    `http://localhost:8080/stock_transfer/search?store_id=${user.store.id}&q=${q ? q : ""}`,
+    "GET",
+    null
+  );
+
+  const data = await response.json();
+
+  if (data.error in data) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
 export const searchStocks = async (q) => {
   const user = JSON.parse(sessionStorage.getItem("user"));
 
@@ -467,7 +485,7 @@ export const sendLaptops = async (isTransfer, date, store_id, transferItems) => 
   // console.log(dataToSend);
   // alert("BREAK");
   const response = await responseInit(
-    "http://localhost:8080/stockstatus/transfer",
+    "http://localhost:8080/stock_transfer/transfer",
     "POST",
     null,
     dataToSend
@@ -495,7 +513,7 @@ export const saleLaptops = async (date, transferItems) => {
   // console.log(dataToSend);
   // alert("BREAK");
   const response = await responseInit(
-    "http://localhost:8080/stockstatus/sold",
+    "http://localhost:8080/stock_transfer/sold",
     "POST",
     null,
     dataToSend
@@ -522,7 +540,7 @@ export const receiveLaptops = async (isTransfer, date, transferItems) => {
   // console.log(dataToSend);
   // alert("BREAK");
   const response = await responseInit(
-    "http://localhost:8080/stockstatus/receive",
+    "http://localhost:8080/stock_transfer/receive",
     "POST",
     null,
     dataToSend

@@ -50,7 +50,7 @@ export default function Sale() {
     event.preventDefault();
 
     const transferItems = selectedRows.map((row) => ({
-      laptop_id: row,
+      item_id: row,
       qtt: qttRef.current[row].value,
     }));
 

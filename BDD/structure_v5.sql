@@ -1,8 +1,8 @@
 -- DATABASES
 -- \c postgres
--- DROP DATABASE eval_v4;
--- CREATE DATABASE eval_v4;
--- \c eval_v4;
+-- DROP DATABASE eval_v5;
+-- CREATE DATABASE eval_v5;
+-- \c eval_v5;
 
 -- Extension
 CREATE EXTENSION pgcrypto;
@@ -16,19 +16,19 @@ CREATE DOMAIN decimal_scale AS numeric(18,2) check(VALUE>=0);
 -- TABLE
 CREATE TABLE Brand (
   id SERIAL PRIMARY KEY,
-  brand_name varchar unique not null
+  brand_name varchar(80) unique not null
 );
 
 CREATE TABLE Cpu (
   id SERIAL PRIMARY KEY,
-  cpu_name varchar unique not null
+  cpu_name varchar(80) unique not null
 );
 
 
 CREATE TABLE Model (
   id SERIAL PRIMARY KEY,
   brand_id integer REFERENCES Brand(id) not null,
-  model_name varchar unique not null,
+  model_name varchar(80) unique not null,
   cpu_id integer REFERENCES Cpu(id) not null,
   screen_size decimal_scale not null,
   ram_size positive_int not null,
@@ -44,36 +44,36 @@ CREATE TABLE LapTop (
 
 CREATE TABLE StoreCategory (
   id SERIAL PRIMARY KEY,
-  category_name varchar unique not null,
+  category_name varchar(80) unique not null,
   category_level smallint unique not null
 );
 
 CREATE TABLE Location (
   id SERIAL PRIMARY KEY,
-  location_name varchar unique not null
+  location_name varchar(80) unique not null
 );
 
 CREATE TABLE Store (
   id SERIAL PRIMARY KEY,
   category_id integer  REFERENCES StoreCategory(id) not null,
   location_id integer  REFERENCES Location(id) not null,
-  store_name varchar unique not null
+  store_name varchar(80) unique not null
 );
 
 CREATE TABLE Profil (
   id SERIAL PRIMARY KEY,
-  profil_name varchar unique not null,
+  profil_name varchar(80) unique not null,
   profil_level smallint unique not null
 );
 
 CREATE TABLE Employee (
   id SERIAL PRIMARY KEY,
   profil_id integer REFERENCES Profil(id) not null,
-  firstname varchar,
-  lastname varchar,
+  firstname varchar(200),
+  lastname varchar(200),
   birthday  date not null, /*  CHECK (date_naissance < CURRENT_DATE - INTERVAL '18 years'), */
-  email varchar unique not null,
-  passwd varchar not null,
+  email varchar(200) unique not null,
+  passwd varchar(200) not null,
   store_id integer REFERENCES Store(id)
 );
 
@@ -92,7 +92,8 @@ CREATE TABLE Stock (
   store_id integer REFERENCES Store(id) not null,
   laptop_id integer REFERENCES LapTop(id) not null,
   qtt_in positive_int not null check(qtt_in>=0) default 0,
-  qtt_out positive_int not null check(qtt_out>=0) default 0
+  qtt_out positive_int not null check(qtt_out>=0) default 0,
+  price decimal_scale not null default 0
 
 );
 
@@ -104,7 +105,7 @@ CREATE TABLE Transfer (
   employee_id integer REFERENCES Employee(id) not null,
   store_to integer REFERENCES Store(id) not null,
   store_from integer REFERENCES Store(id) not null,
-  laptop_id integer REFERENCES LapTop(id) not null,
+  stock_id integer REFERENCES Stock(id) not null,
   qtt positive_int not null check(qtt>0) default 1
   check(store_from <> store_to)
 );
@@ -196,12 +197,27 @@ from reception group by transfer_id, store_id;
 CREATE OR REPLACE VIEW V_received AS
 SELECT
     t.id AS transfer_id,
-    t.laptop_id,
+    s.laptop_id,
+    COALESCE(t.store_to, r.receiver) AS receiver ,
+    COALESCE(t.qtt, 0) - COALESCE(r.qtt, 0) AS qtt
+    from transfer t full join v_reception r 
+on t.id = r.transfer_id 
+left join Stock s on t.stock_id = s.id
+and t.store_to = r.receiver;
+
+CREATE OR REPLACE VIEW v_transfer_reception AS
+SELECT
+    t.id AS transfer_id,
+    t.stock_id,
     COALESCE(t.store_to, r.receiver) AS receiver ,
     COALESCE(t.qtt, 0) - COALESCE(r.qtt, 0) AS qtt
     from transfer t full join v_reception r 
 on t.id = r.transfer_id 
 and t.store_to = r.receiver;
+
+CREATE OR REPLACE VIEW V_received AS
+SELECT t.transfer_id,s.laptop_id,t.receiver,t.qtt
+from v_transfer_reception t left join Stock s on t.stock_id = s.id 
 
 
 CREATE OR REPLACE VIEW v_received_search AS
@@ -492,3 +508,40 @@ SELECT month id,month , sale, purchase, loss ,commission, profit from getprofitM
 CREATE OR REPLACE VIEW v_store_commission AS
 SELECT store_id,month,year,COALESCE(sale,0) sale,COALESCE(commission,0) commission
 from v_sales_store v ;
+
+
+
+
+
+
+-- listes des socks pouvant être transférer
+-- * sorti transfert
+CREATE OR REPLACE VIEW v_transfer_out AS
+SELECT store_from store_id,stock_id,COALESCE(sum(qtt),0) AS qtt_out  
+from transfer group by store_from,stock_id;
+
+CREATE OR REPLACE VIEW v_stock_totransfer AS
+SELECT s.id, s.id stock_id,s.store_id,s.laptop_id,(s.qtt_in-COALESCE(t.qtt_out,0)) qtt from 
+stock s left join v_transfer_out t 
+on s.id = t.stock_id and s.store_id=t.store_id 
+where s.qtt_in !=0; 
+
+
+CREATE OR REPLACE VIEW v_stock_totransfer_search as 
+SELECT s.*, l.model_name,l.brand_id,l.brand_name,l.cpu_name,l.ram_size,l.disk_size from v_stock_totransfer s join v_laptop_search l  
+on s.laptop_id =  l.id;
+
+
+-- INSERT INTO model (id,brand_id,model_name,cpu_id,screen_size,ram_size,disk_size) VALUES
+-- (1,1,'M1',1,14,8,512);
+
+-- INSERT INTO laptop (id,model_id) VALUES 
+-- (1,1);
+
+-- INSERT INTO Stock (id,transaction_date,store_id,laptop_id,qtt_in,qtt_out,price) VALUES
+-- (1,default,1,1,18,0,1500000);
+-- INSERT INTO Stock (id,transaction_date,store_id,laptop_id,qtt_in,qtt_out,price) VALUES
+-- (3,default,1,1,0,13,1500000);
+
+-- INSERT INTO Transfer (id,transfer_date,employee_id,store_from,store_to,stock_id,qtt) VALUES
+-- (1,default,1,1,2,1,5);

@@ -11,8 +11,8 @@ import FormInput from "own/components/form/FormInput";
 import { useEffect, useRef, useState } from "react";
 import magasin_routes from "routes/magasin";
 import point_ventes_routes from "routes/point_ventes";
+import { getStockToTransfer } from "routes/ws_call";
 import { sendLaptops } from "routes/ws_call";
-import { searchStocks } from "routes/ws_call";
 import { getSalesPoint } from "routes/ws_call";
 
 export default function Transfert() {
@@ -39,7 +39,7 @@ export default function Transfert() {
   const [salesPoints, setSalesPoints] = useState([]);
   const fetchData = async () => {
     try {
-      const data = await searchStocks(q.current.value);
+      const data = await getStockToTransfer(q.current.value);
       setStocks(data);
       const stores = await getSalesPoint();
       setSalesPoints(stores);
@@ -110,8 +110,13 @@ export default function Transfert() {
   };
 
   const columns = [
-    { field: "brand_name", headerName: "Brand", width: 150 },
-    { field: "model_name", headerName: "Model", width: 300 },
+    {
+      field: "stock_date",
+      headerName: "Date de stockage",
+      width: 200,
+    },
+    { field: "brand_name", headerName: "Marque", width: 150 },
+    { field: "model_name", headerName: "Référence", width: 150 },
     {
       field: "qtt",
       headerName: "Disponible ",
@@ -121,13 +126,19 @@ export default function Transfert() {
       headerName: "Quantité ",
       renderCell: (params) => qttInput(params),
     },
+    {
+      field: "stock_price",
+      headerName: "Prix",
+    },
   ];
 
   const rows = stocks.map((item) => ({
     id: item.id,
     brand_name: item.laptop.model.brand.brand_name,
     model_name: item.laptop.model.model_name,
+    stock_date: item.stock.transaction_date,
     qtt: item.qtt,
+    stock_price: item.stock.price,
   }));
 
   const today = new Date().toISOString().split("T")[0];

@@ -82,10 +82,10 @@ export default function Signin() {
                 <form onSubmit={signin}>
                   <MKBox>
                     <MKBox mb={2}>
-                      <MKInput type="email" label="Email" inputRef={email} fullWidth />
+                      <MKInput type="email" label="E-mail" inputRef={email} fullWidth />
                     </MKBox>
                     <MKBox mb={2}>
-                      <MKInput type="password" inputRef={passwd} label="Password" fullWidth />
+                      <MKInput type="password" inputRef={passwd} label="Mot de passe" fullWidth />
                     </MKBox>
                     <MKBox mt={4} mb={1}>
                       <MKButton
