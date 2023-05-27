@@ -17,7 +17,7 @@ Coded by www.creative-tim.com
 import PropTypes from "prop-types";
 
 // react-router-dom components
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 // @mui material components
 import Collapse from "@mui/material/Collapse";
@@ -50,6 +50,10 @@ function DefaultNavbarDropdown({
     to: route,
   };
 
+  const location = useLocation();
+
+  const isActive = route === location.pathname ? true : false;
+
   return (
     <>
       <MKBox
@@ -60,7 +64,17 @@ function DefaultNavbarDropdown({
         alignItems="baseline"
         color={light ? "white" : "dark"}
         opacity={light ? 1 : 0.6}
-        sx={{ cursor: "pointer", userSelect: "none" }}
+        // sx={{ cursor: "pointer", userSelect: "none" }}
+
+        sx={({ palette: { grey, dark } }) => ({
+          "&:hover": {
+            backgroundColor: grey[200],
+            color: dark.main,
+          },
+          backgroundColor: isActive ? grey[200] : "",
+          cursor: "pointer",
+          userSelect: "none",
+        })}
         {...(route && routeComponent)}
         {...(href && linkComponent)}
       >

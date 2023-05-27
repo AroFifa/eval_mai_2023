@@ -17,7 +17,7 @@ Coded by www.creative-tim.com
 import { Fragment, useState, useEffect } from "react";
 
 // react-router components
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 // prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
@@ -65,6 +65,8 @@ function DefaultNavbar({
   const [mobileView, setMobileView] = useState(false);
 
   const openMobileNavbar = () => setMobileNavbar(!mobileNavbar);
+
+  const location = useLocation();
 
   useEffect(() => {
     // A function that sets the display state for the DefaultNavbarMobile.
@@ -137,51 +139,57 @@ function DefaultNavbar({
 
             return (
               <Grid key={gridKey} item xs={12 / columns} sx={{ position: "relative" }}>
-                {cols.map((col, index) => (
-                  <Fragment key={col.name}>
-                    <MKTypography
-                      display="block"
-                      variant="button"
-                      fontWeight="bold"
-                      textTransform="capitalize"
-                      py={1}
-                      px={0.5}
-                      mt={index !== 0 ? 2 : 0}
-                    >
-                      {col.name}
-                    </MKTypography>
-                    {col.collapse.map((item) => (
+                {cols.map((col, index) => {
+                  return (
+                    <Fragment key={col.name}>
                       <MKTypography
-                        key={item.name}
-                        component={item.route ? Link : MuiLink}
-                        to={item.route ? item.route : ""}
-                        href={item.href ? item.href : (e) => e.preventDefault()}
-                        target={item.href ? "_blank" : ""}
-                        rel={item.href ? "noreferrer" : "noreferrer"}
-                        minWidth="11.25rem"
                         display="block"
                         variant="button"
-                        color="text"
+                        fontWeight="bold"
                         textTransform="capitalize"
-                        fontWeight="regular"
-                        py={0.625}
-                        px={2}
-                        sx={({ palette: { grey, dark }, borders: { borderRadius } }) => ({
-                          borderRadius: borderRadius.md,
-                          cursor: "pointer",
-                          transition: "all 300ms linear",
-
-                          "&:hover": {
-                            backgroundColor: grey[200],
-                            color: dark.main,
-                          },
-                        })}
+                        py={1}
+                        px={0.5}
+                        mt={index !== 0 ? 2 : 0}
                       >
-                        {item.name}
+                        {col.name}
                       </MKTypography>
-                    ))}
-                  </Fragment>
-                ))}
+                      {col.collapse.map((item) => {
+                        // console.log(location.pathname);
+                        const isActive = item.route === location.pathname ? true : false;
+                        return (
+                          <MKTypography
+                            key={item.name}
+                            component={item.route ? Link : MuiLink}
+                            to={item.route ? item.route : ""}
+                            href={item.href ? item.href : (e) => e.preventDefault()}
+                            target={item.href ? "_blank" : ""}
+                            rel={item.href ? "noreferrer" : "noreferrer"}
+                            minWidth="11.25rem"
+                            display="block"
+                            variant="button"
+                            color="text"
+                            textTransform="capitalize"
+                            fontWeight="regular"
+                            py={0.625}
+                            px={2}
+                            sx={({ palette: { grey, dark }, borders: { borderRadius } }) => ({
+                              borderRadius: borderRadius.md,
+                              cursor: "pointer",
+                              transition: "all 300ms linear",
+                              backgroundColor: isActive ? grey[200] : "",
+                              "&:hover": {
+                                backgroundColor: grey[200],
+                                color: dark.main,
+                              },
+                            })}
+                          >
+                            {item.name}
+                          </MKTypography>
+                        );
+                      })}
+                    </Fragment>
+                  );
+                })}
                 {key !== 0 && (
                   <Divider
                     key={dividerKey}
@@ -216,6 +224,12 @@ function DefaultNavbar({
           to: item.route,
         };
 
+        const isActive = item.collapse.some((collapseItem) => {
+          return collapseItem.route === location.pathname;
+        })
+          ? true
+          : false;
+
         return (
           <MKTypography
             key={item.name}
@@ -234,6 +248,8 @@ function DefaultNavbar({
               borderRadius: borderRadius.md,
               cursor: "pointer",
               transition: "all 300ms linear",
+
+              backgroundColor: isActive ? grey[200] : "",
 
               "&:hover": {
                 backgroundColor: grey[200],
@@ -359,6 +375,7 @@ function DefaultNavbar({
                   component: Link,
                   to: item.route,
                 };
+                const isActive = item.route === location.pathname ? true : false;
 
                 return (
                   <MKTypography
@@ -378,6 +395,7 @@ function DefaultNavbar({
                       borderRadius: borderRadius.md,
                       cursor: "pointer",
                       transition: "all 300ms linear",
+                      backgroundColor: isActive ? grey[200] : "",
 
                       "&:hover": {
                         backgroundColor: grey[200],

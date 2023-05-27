@@ -57,7 +57,18 @@ export default function ListLaptop() {
     {
       field: "Marque",
       headerName: "Marque",
-      valueGetter: (params) => `${params.row.model.brand.brand_name || ""}`,
+      // valueGetter: (params) => `${params.row.model?.brand.brand_name || ""}`,
+      valueGetter: ({ row }) => {
+        if (row.id === "SUBTOTAL") {
+          return row.label;
+        }
+        return row.model?.brand.brand_name || "";
+      },
+      colSpan: ({ row }) => {
+        if (row.id === "SUBTOTAL") {
+          return 5;
+        }
+      },
     },
     {
       field: "Model",
@@ -88,6 +99,12 @@ export default function ListLaptop() {
       field: "sales_price",
       headerName: "Prix",
       width: 200,
+      valueGetter: ({ row, value }) => {
+        if (row.id === "SUBTOTAL") {
+          return `${row.subtotal}`;
+        }
+        return value;
+      },
     },
     {
       field: "Update Link",
@@ -102,6 +119,7 @@ export default function ListLaptop() {
     },
   ];
 
+  const rows = [...laptops, { id: "SUBTOTAL", label: "Subtotal", subtotal: 624 }];
   return (
     <>
       <DefaultNavbar routes={magasin_routes} brand={"Magasin centrale"} sticky />
@@ -127,14 +145,20 @@ export default function ListLaptop() {
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
           <DataGrid
-            rows={laptops}
+            rows={rows}
             columns={columns}
             initialState={{
               pagination: {
-                paginationModel: { page: 0, pageSize: 10 },
+                paginationModel: { page: 0, pageSize: 20 },
               },
             }}
             pageSizeOptions={[5, 10]}
+            localeText={{
+              MuiTablePagination: {
+                labelDisplayedRows: ({ from, to, count }) => `${from} - ${to} pour ${count}`,
+                labelRowsPerPage: `Lignes:`,
+              },
+            }}
             // onRowClick={handleClick}
           />
         </Grid>

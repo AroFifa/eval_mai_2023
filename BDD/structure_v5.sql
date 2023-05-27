@@ -287,8 +287,7 @@ $$ LANGUAGE plpgsql;
 
 
 
-
-CREATE OR REPLACE FUNCTION getStoreMonthSalesByYear(min_year INTEGER, max_year INTEGER,value VARCHAR)
+CREATE OR REPLACE FUNCTION getStoreMonthSalesByYear(min_year INTEGER, max_year INTEGER, value VARCHAR)
 RETURNS TABLE (
   store_id INTEGER,
   jan NUMERIC,
@@ -309,9 +308,13 @@ BEGIN
   RETURN QUERY
   SELECT *
   FROM crosstab(
-    format('SELECT s.id store_id, "month", COALESCE(%s, 0)
+    format('SELECT s.id AS store_id, m.month_number AS "month", COALESCE(sum(%s), 0)
             FROM store s
-            CROSS JOIN month m left join getStoreMonthSales(%s, %s) v ON s.id = v.store_id and m.month_number = v."month" ', value,
+            CROSS JOIN month m 
+            LEFT JOIN getStoreMonthSales(%s, %s) v 
+            ON s.id = v.store_id AND m.month_number = v."month" 
+            GROUP BY s.id, m.month_number
+            ORDER BY s.id, m.month_number', value,
             CASE WHEN min_year IS NULL THEN 'null' ELSE min_year::TEXT END,
             CASE WHEN max_year IS NULL THEN 'null' ELSE max_year::TEXT END),
     'SELECT month_number FROM month ORDER BY month_number'
@@ -333,9 +336,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT * from getStoreMonthSalesByYear(null,null,'total_price') order by store_id;
+-- SELECT * from getStoreMonthSalesByYear(null,null,'total_price') order by store_id;
 
-
+SELECT store_id id,* from getStoreMonthSalesByYear(null,null,'total_price');
 -- BENEFICE
 CREATE OR REPLACE VIEW v_mouvement_tmp as
 SELECT transaction_date,store_id, 
@@ -425,7 +428,7 @@ INSERT INTO Commission_level (min,max,commission) VALUES
 CREATE OR REPLACE VIEW v_sales_store_tmp as
 SELECT store_id,EXTRACT('month' from transaction_date) "month",EXTRACT('year' from transaction_date) "year",
 COALESCE(sum(sale),0) sale
-from v_mouvement_tmp group by "year","month",store_id;
+from v_mouvement_tmp where sale!=0 group by "year","month",store_id;
 
 -- SELECT
 --   SUM(
@@ -545,3 +548,9 @@ on s.laptop_id =  l.id;
 
 -- INSERT INTO Transfer (id,transfer_date,employee_id,store_from,store_to,stock_id,qtt) VALUES
 -- (1,default,1,1,2,1,5);
+
+
+
+SELECT s.id store_id,m.month_number "month", COALESCE(total_price, 0)
+            FROM store s
+            CROSS JOIN month m left join getStoreMonthSales(null, null) v ON s.id = v.store_id and m.month_number = v."month"

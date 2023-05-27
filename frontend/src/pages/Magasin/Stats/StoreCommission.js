@@ -31,7 +31,10 @@ export default function StoreCommission() {
   const yearRef = useRef();
   const fetchData = async () => {
     try {
-      const d = await getStoreCommissions(monthRef.current.value, yearRef.current.value);
+      const d = await getStoreCommissions(
+        monthRef.current.value ? monthRef.current.value : "",
+        yearRef.current.value
+      );
       setData(d);
       const m = await getMonths();
       setMonths(m);
@@ -61,13 +64,13 @@ export default function StoreCommission() {
   }
   const columns = [
     {
-      field: "month",
-      headerName: "Mois",
+      field: "year",
+      headerName: "Année",
       width: 200,
     },
     {
-      field: "year",
-      headerName: "Année",
+      field: "month",
+      headerName: "Mois",
       width: 200,
     },
     {
@@ -79,7 +82,7 @@ export default function StoreCommission() {
       },
     },
     {
-      field: "Commission",
+      field: "commission",
       headerName: "Commission",
       width: 200,
       renderCell: (params) => {
@@ -88,16 +91,12 @@ export default function StoreCommission() {
     },
 
     { field: "store_name", headerName: "Point de vente", width: 200 },
-    {
-      field: "month",
-      headerName: "Mois",
-      width: 200,
-    },
   ];
   const rows = data.map((item) => ({
     id: item.id,
     store_name: item.store.store_name,
     month: item.month.month_name,
+    year: item.year,
     sale: item.sale,
     commission: item.commission,
   }));
@@ -107,7 +106,7 @@ export default function StoreCommission() {
     type: "data",
     placeholder: "mois",
     ref: monthRef,
-
+    onchange: handleChange,
     fullWidth: true,
     data: {
       data: months,
@@ -129,7 +128,7 @@ export default function StoreCommission() {
             <Grid item xs={12} md={3}>
               <MKInput
                 variant="outlined"
-                label="Max"
+                label="Année"
                 type="number"
                 fullWidth
                 inputRef={yearRef}

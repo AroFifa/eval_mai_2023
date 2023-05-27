@@ -29,12 +29,12 @@ const magasin_routes = [
         collapse: [
           {
             name: "Enregistrement",
-            route: "/magasin/laptops/save",
+            route: "/laptops/save",
             component: <SaveLaptop />,
           },
           {
             name: "Listes",
-            route: "/magasin/laptops/list",
+            route: "/laptops/list",
             component: <ListLaptop />,
           },
         ],
@@ -44,7 +44,7 @@ const magasin_routes = [
         collapse: [
           {
             name: "Achat",
-            route: "/magasin/laptops/purchase",
+            route: "/laptops/purchase",
             component: <Purchase />,
           },
         ],
@@ -54,12 +54,12 @@ const magasin_routes = [
         collapse: [
           {
             name: "Transfert",
-            route: "/magasin/laptops/transfer",
+            route: "/laptops/transfer",
             component: <Transfert />,
           },
           {
             name: "Réception",
-            route: "/magasin/laptops/reception",
+            route: "/laptops/reception",
             component: <Reception />,
           },
         ],
@@ -77,7 +77,7 @@ const magasin_routes = [
         collapse: [
           {
             name: "Enregistrement",
-            route: "/magasin/model/models/save",
+            route: "/models/save",
             component: <SaveModel />,
           },
         ],
@@ -88,7 +88,7 @@ const magasin_routes = [
         collapse: [
           {
             name: "Enregistrement",
-            route: "/magasin/model/brands/save",
+            route: "/models/brands/save",
             component: <SaveBrand />,
           },
         ],
@@ -99,7 +99,7 @@ const magasin_routes = [
         collapse: [
           {
             name: "Enregistrement",
-            route: "/magasin/model/cpus/save",
+            route: "/models/cpus/save",
             component: <SaveCpu />,
           },
         ],
@@ -118,12 +118,12 @@ const magasin_routes = [
         collapse: [
           {
             name: "Enregistrement",
-            route: "/magasin/stores/save",
+            route: "/stores/save",
             component: <SaveSalespoint />,
           },
           {
             name: "Listes",
-            route: "/magasin/stores/list",
+            route: "/stores/list",
             component: <ListSalespoint />,
           },
         ],
@@ -133,7 +133,7 @@ const magasin_routes = [
         collapse: [
           {
             name: "Affectation",
-            route: "/magasin/employees/affect",
+            route: "/stores/affect",
             component: <EmployeeAffectation />,
           },
         ],
