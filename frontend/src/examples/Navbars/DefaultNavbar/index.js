@@ -238,7 +238,7 @@ function DefaultNavbar({
           to: item.route,
         };
 
-        const isActive = item.collapse.some((collapseItem) => {
+        const isActive = item.collapse?.some((collapseItem) => {
           return collapseItem.route === location.pathname;
         })
           ? true
