@@ -93,25 +93,39 @@ function DefaultNavbar({
     return () => window.removeEventListener("resize", displayMobileNavbar);
   }, []);
 
-  const renderNavbarItems = routes.map(({ name, icon, href, route, collapse }) => (
-    <DefaultNavbarDropdown
-      key={name}
-      name={name}
-      icon={icon}
-      href={href}
-      route={route}
-      collapse={Boolean(collapse)}
-      onMouseEnter={({ currentTarget }) => {
-        if (collapse) {
-          setDropdown(currentTarget);
-          setDropdownEl(currentTarget);
-          setDropdownName(name);
-        }
-      }}
-      onMouseLeave={() => collapse && setDropdown(null)}
-      light={light}
-    />
-  ));
+  const renderNavbarItems = routes.map(({ name, icon, href, route, collapse }) => {
+    // Function to check if a collapse item's route matches location.pathname
+    const isCollapseRouteMatched = (item, path) => {
+      if (item.route === path) {
+        return true;
+      }
+      return item.collapse?.some((nestedItem) => isCollapseRouteMatched(nestedItem, path)) || false;
+    };
+
+    // Check if the collapse item's route matches location.pathname
+    const isActive = collapse?.some((item) => isCollapseRouteMatched(item, location.pathname));
+
+    return (
+      <DefaultNavbarDropdown
+        key={name}
+        name={name}
+        icon={icon}
+        href={href}
+        route={route}
+        isActive={isActive}
+        collapse={Boolean(collapse)}
+        onMouseEnter={({ currentTarget }) => {
+          if (collapse) {
+            setDropdown(currentTarget);
+            setDropdownEl(currentTarget);
+            setDropdownName(name);
+          }
+        }}
+        onMouseLeave={() => collapse && setDropdown(null)}
+        light={light}
+      />
+    );
+  });
 
   // Render the routes on the dropdown menu
   const renderRoutes = routes.map(({ name, collapse, columns, rowsPerColumn }) => {

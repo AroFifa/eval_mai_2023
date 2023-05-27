@@ -17,7 +17,7 @@ Coded by www.creative-tim.com
 import PropTypes from "prop-types";
 
 // react-router-dom components
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 // @mui material components
 import Collapse from "@mui/material/Collapse";
@@ -36,6 +36,7 @@ function DefaultNavbarDropdown({
   href,
   route,
   collapse,
+  isActive,
   ...rest
 }) {
   const linkComponent = {
@@ -49,10 +50,6 @@ function DefaultNavbarDropdown({
     component: Link,
     to: route,
   };
-
-  const location = useLocation();
-
-  const isActive = route === location.pathname ? true : false;
 
   return (
     <>
@@ -129,6 +126,7 @@ DefaultNavbarDropdown.propTypes = {
   href: PropTypes.string,
   route: PropTypes.string,
   collapse: PropTypes.bool.isRequired,
+  isActive: PropTypes.bool,
 };
 
 export default DefaultNavbarDropdown;
