@@ -65,21 +65,28 @@ CREATE DOMAIN public.positive_int AS integer
 ALTER DOMAIN public.positive_int OWNER TO postgres;
 
 --
--- Name: getbenefitmonthsales(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: getcommissionamount(numeric); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.getbenefitmonthsales(minyear integer, maxyear integer) RETURNS TABLE(month numeric, benefit numeric)
+CREATE FUNCTION public.getcommissionamount(price numeric) RETURNS TABLE(commission_amount numeric)
     LANGUAGE plpgsql
     AS $$
 BEGIN
   RETURN QUERY
-  SELECT v."month",sum(v.benefit) benefit 
-  from v_benefit_sales v where v."year" is null or v."year" BETWEEN COALESCE(minYear,'1980') AND COALESCE(maxYear,'2080') group by v."month";
+  SELECT
+  SUM(
+    CASE
+      WHEN amount <= max THEN (amount - LEAST(amount, min)) * commission / 100
+      ELSE (max - LEAST(max, min)) * commission / 100
+    END
+  ) AS commission_amount
+  FROM commission_level, (VALUES (price)) AS t(amount)
+  WHERE amount >= min;
 END;
 $$;
 
 
-ALTER FUNCTION public.getbenefitmonthsales(minyear integer, maxyear integer) OWNER TO postgres;
+ALTER FUNCTION public.getcommissionamount(price numeric) OWNER TO postgres;
 
 --
 -- Name: getglobalmonthsales(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -97,6 +104,28 @@ $$;
 
 
 ALTER FUNCTION public.getglobalmonthsales(minyear integer, maxyear integer) OWNER TO postgres;
+
+--
+-- Name: getprofitmonthsales(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.getprofitmonthsales(minyear integer, maxyear integer) RETURNS TABLE(month numeric, sale numeric, purchase numeric, loss numeric, commission numeric, profit numeric)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  RETURN QUERY
+  SELECT v."month",
+  sum(v.sale) sale,
+  sum(v.purchase) purchase,
+  sum(v.loss) loss,
+  sum(v.commission) commission,
+  sum(v.profit) profit
+  from v_profit_sales v where v."year" is null or v."year" BETWEEN COALESCE(minYear,'1980') AND COALESCE(maxYear,'2080') group by v."month";
+END;
+$$;
+
+
+ALTER FUNCTION public.getprofitmonthsales(minyear integer, maxyear integer) OWNER TO postgres;
 
 --
 -- Name: getstoremonthsales(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -126,9 +155,13 @@ BEGIN
   RETURN QUERY
   SELECT *
   FROM crosstab(
-    format('SELECT s.id store_id, "month", COALESCE(%s, 0)
+    format('SELECT s.id AS store_id, m.month_number AS "month", COALESCE(sum(%s), 0)
             FROM store s
-            CROSS JOIN month m left join getStoreMonthSales(%s, %s) v ON s.id = v.store_id and m.month_number = v."month" ', value,
+            CROSS JOIN month m 
+            LEFT JOIN getStoreMonthSales(%s, %s) v 
+            ON s.id = v.store_id AND m.month_number = v."month" 
+            GROUP BY s.id, m.month_number
+            ORDER BY s.id, m.month_number', value,
             CASE WHEN min_year IS NULL THEN 'null' ELSE min_year::TEXT END,
             CASE WHEN max_year IS NULL THEN 'null' ELSE max_year::TEXT END),
     'SELECT month_number FROM month ORDER BY month_number'
@@ -163,7 +196,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.brand (
     id integer NOT NULL,
-    brand_name character varying NOT NULL
+    brand_name character varying(80) NOT NULL
 );
 
 
@@ -192,12 +225,49 @@ ALTER SEQUENCE public.brand_id_seq OWNED BY public.brand.id;
 
 
 --
+-- Name: commission_level; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.commission_level (
+    id integer NOT NULL,
+    min public.decimal_scale,
+    max public.decimal_scale,
+    commission public.decimal_scale NOT NULL,
+    CONSTRAINT commission_level_check CHECK ((((max)::numeric > (min)::numeric) OR (max IS NULL)))
+);
+
+
+ALTER TABLE public.commission_level OWNER TO postgres;
+
+--
+-- Name: commission_level_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.commission_level_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.commission_level_id_seq OWNER TO postgres;
+
+--
+-- Name: commission_level_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.commission_level_id_seq OWNED BY public.commission_level.id;
+
+
+--
 -- Name: cpu; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.cpu (
     id integer NOT NULL,
-    cpu_name character varying NOT NULL
+    cpu_name character varying(80) NOT NULL
 );
 
 
@@ -232,11 +302,11 @@ ALTER SEQUENCE public.cpu_id_seq OWNED BY public.cpu.id;
 CREATE TABLE public.employee (
     id integer NOT NULL,
     profil_id integer NOT NULL,
-    firstname character varying,
-    lastname character varying,
+    firstname character varying(200),
+    lastname character varying(200),
     birthday date NOT NULL,
-    email character varying NOT NULL,
-    passwd character varying NOT NULL,
+    email character varying(200) NOT NULL,
+    passwd character varying(200) NOT NULL,
     store_id integer
 );
 
@@ -306,7 +376,7 @@ ALTER SEQUENCE public.laptop_id_seq OWNED BY public.laptop.id;
 
 CREATE TABLE public.location (
     id integer NOT NULL,
-    location_name character varying NOT NULL
+    location_name character varying(80) NOT NULL
 );
 
 
@@ -341,7 +411,7 @@ ALTER SEQUENCE public.location_id_seq OWNED BY public.location.id;
 CREATE TABLE public.model (
     id integer NOT NULL,
     brand_id integer NOT NULL,
-    model_name character varying NOT NULL,
+    model_name character varying(80) NOT NULL,
     cpu_id integer NOT NULL,
     screen_size public.decimal_scale NOT NULL,
     ram_size public.positive_int NOT NULL,
@@ -391,8 +461,11 @@ ALTER TABLE public.month OWNER TO postgres;
 
 CREATE TABLE public.mouvement (
     id integer NOT NULL,
-    price public.decimal_scale NOT NULL,
-    transaction_id integer NOT NULL,
+    sale public.decimal_scale DEFAULT 0 NOT NULL,
+    purchase public.decimal_scale DEFAULT 0 NOT NULL,
+    transfer public.decimal_scale DEFAULT 0 NOT NULL,
+    reception public.decimal_scale DEFAULT 0 NOT NULL,
+    store_id integer,
     transaction_date date DEFAULT CURRENT_DATE NOT NULL
 );
 
@@ -427,7 +500,7 @@ ALTER SEQUENCE public.mouvement_id_seq OWNED BY public.mouvement.id;
 
 CREATE TABLE public.profil (
     id integer NOT NULL,
-    profil_name character varying NOT NULL,
+    profil_name character varying(80) NOT NULL,
     profil_level smallint NOT NULL
 );
 
@@ -504,7 +577,7 @@ CREATE TABLE public.reception (
     reception_date date DEFAULT CURRENT_DATE NOT NULL,
     employee_id integer NOT NULL,
     store_id integer NOT NULL,
-    laptop_id integer NOT NULL,
+    transfer_id integer NOT NULL,
     qtt public.positive_int DEFAULT 1 NOT NULL,
     CONSTRAINT reception_qtt_check CHECK (((qtt)::integer > 0))
 );
@@ -582,9 +655,11 @@ CREATE TABLE public.stock (
     transaction_date date DEFAULT CURRENT_DATE NOT NULL,
     store_id integer NOT NULL,
     laptop_id integer NOT NULL,
-    qtt public.positive_int DEFAULT 1 NOT NULL,
-    transaction_id integer NOT NULL,
-    CONSTRAINT stock_qtt_check CHECK (((qtt)::integer > 0))
+    qtt_in public.positive_int DEFAULT 0 NOT NULL,
+    qtt_out public.positive_int DEFAULT 0 NOT NULL,
+    price public.decimal_scale DEFAULT 0 NOT NULL,
+    CONSTRAINT stock_qtt_in_check CHECK (((qtt_in)::integer >= 0)),
+    CONSTRAINT stock_qtt_out_check CHECK (((qtt_out)::integer >= 0))
 );
 
 
@@ -620,7 +695,7 @@ CREATE TABLE public.store (
     id integer NOT NULL,
     category_id integer NOT NULL,
     location_id integer NOT NULL,
-    store_name character varying NOT NULL
+    store_name character varying(80) NOT NULL
 );
 
 
@@ -654,7 +729,7 @@ ALTER SEQUENCE public.store_id_seq OWNED BY public.store.id;
 
 CREATE TABLE public.storecategory (
     id integer NOT NULL,
-    category_name character varying NOT NULL,
+    category_name character varying(80) NOT NULL,
     category_level smallint NOT NULL
 );
 
@@ -684,41 +759,6 @@ ALTER SEQUENCE public.storecategory_id_seq OWNED BY public.storecategory.id;
 
 
 --
--- Name: transaction_type; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.transaction_type (
-    id integer NOT NULL,
-    transaction_name character varying NOT NULL,
-    transaction_level smallint NOT NULL
-);
-
-
-ALTER TABLE public.transaction_type OWNER TO postgres;
-
---
--- Name: transaction_type_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.transaction_type_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.transaction_type_id_seq OWNER TO postgres;
-
---
--- Name: transaction_type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.transaction_type_id_seq OWNED BY public.transaction_type.id;
-
-
---
 -- Name: transfer; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -728,7 +768,7 @@ CREATE TABLE public.transfer (
     employee_id integer NOT NULL,
     store_to integer NOT NULL,
     store_from integer NOT NULL,
-    laptop_id integer NOT NULL,
+    stock_id integer NOT NULL,
     qtt public.positive_int DEFAULT 1 NOT NULL,
     CONSTRAINT transfer_check CHECK ((store_from <> store_to)),
     CONSTRAINT transfer_qtt_check CHECK (((qtt)::integer > 0))
@@ -760,117 +800,31 @@ ALTER SEQUENCE public.transfer_id_seq OWNED BY public.transfer.id;
 
 
 --
--- Name: v_input; Type: VIEW; Schema: public; Owner: postgres
+-- Name: v_etat_stock_tmp; Type: VIEW; Schema: public; Owner: postgres
 --
 
-CREATE VIEW public.v_input AS
- SELECT mouvement.transaction_date,
-    sum((mouvement.price)::numeric) AS input
-   FROM public.mouvement
-  WHERE (mouvement.transaction_id = 1)
-  GROUP BY mouvement.transaction_date;
-
-
-ALTER TABLE public.v_input OWNER TO postgres;
-
---
--- Name: v_output; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW public.v_output AS
- SELECT mouvement.transaction_date,
-    sum((mouvement.price)::numeric) AS output
-   FROM public.mouvement
-  WHERE (mouvement.transaction_id = 2)
-  GROUP BY mouvement.transaction_date;
-
-
-ALTER TABLE public.v_output OWNER TO postgres;
-
---
--- Name: v_mouvement; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW public.v_mouvement AS
- SELECT COALESCE(i.transaction_date, o.transaction_date) AS transaction_date,
-    i.input,
-    o.output,
-    (i.input - o.output) AS benefit
-   FROM (public.v_input i
-     JOIN public.v_output o ON ((i.transaction_date = o.transaction_date)));
-
-
-ALTER TABLE public.v_mouvement OWNER TO postgres;
-
---
--- Name: v_benefit_sales_tmp; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW public.v_benefit_sales_tmp AS
- SELECT EXTRACT(month FROM v_mouvement.transaction_date) AS month,
-    EXTRACT(year FROM v_mouvement.transaction_date) AS year,
-    COALESCE(sum(v_mouvement.benefit), (0)::numeric) AS benefit
-   FROM public.v_mouvement
-  GROUP BY (EXTRACT(year FROM v_mouvement.transaction_date)), (EXTRACT(month FROM v_mouvement.transaction_date));
-
-
-ALTER TABLE public.v_benefit_sales_tmp OWNER TO postgres;
-
---
--- Name: v_benefit_sales; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW public.v_benefit_sales AS
- SELECT (m.month_number)::numeric AS month,
-    s.year,
-    s.benefit
-   FROM (public.month m
-     LEFT JOIN public.v_benefit_sales_tmp s ON (((m.month_number)::numeric = s.month)));
-
-
-ALTER TABLE public.v_benefit_sales OWNER TO postgres;
-
---
--- Name: v_etat_stock_in; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW public.v_etat_stock_in AS
- SELECT stock.laptop_id,
+CREATE VIEW public.v_etat_stock_tmp AS
+ SELECT stock.transaction_date,
+    stock.laptop_id,
     stock.store_id,
-    COALESCE(sum((stock.qtt)::integer), (0)::bigint) AS qtt
+    (COALESCE(sum((stock.qtt_in)::integer), (0)::bigint) - COALESCE(sum((stock.qtt_out)::integer), (0)::bigint)) AS qtt
    FROM public.stock
-  WHERE (stock.transaction_id = 1)
-  GROUP BY stock.laptop_id, stock.store_id;
+  GROUP BY stock.transaction_date, stock.laptop_id, stock.store_id;
 
 
-ALTER TABLE public.v_etat_stock_in OWNER TO postgres;
-
---
--- Name: v_etat_stock_out; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW public.v_etat_stock_out AS
- SELECT stock.laptop_id,
-    stock.store_id,
-    COALESCE(sum((stock.qtt)::integer), (0)::bigint) AS qtt
-   FROM public.stock
-  WHERE (stock.transaction_id = 2)
-  GROUP BY stock.laptop_id, stock.store_id;
-
-
-ALTER TABLE public.v_etat_stock_out OWNER TO postgres;
+ALTER TABLE public.v_etat_stock_tmp OWNER TO postgres;
 
 --
 -- Name: v_etat_stock; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.v_etat_stock AS
- SELECT COALESCE(sin.laptop_id, sout.laptop_id) AS id,
-    COALESCE(sin.laptop_id, sout.laptop_id) AS laptop_id,
-    COALESCE(sin.store_id, sout.store_id) AS store_id,
-    (COALESCE(sin.qtt, (0)::bigint) - COALESCE(sout.qtt, (0)::bigint)) AS qtt
-   FROM (public.v_etat_stock_in sin
-     FULL JOIN public.v_etat_stock_out sout ON (((sin.laptop_id = sout.laptop_id) AND (sin.store_id = sout.store_id))));
+ SELECT v_etat_stock_tmp.laptop_id AS id,
+    v_etat_stock_tmp.laptop_id,
+    v_etat_stock_tmp.store_id,
+    COALESCE(sum(v_etat_stock_tmp.qtt), (0)::numeric) AS qtt
+   FROM public.v_etat_stock_tmp
+  GROUP BY v_etat_stock_tmp.laptop_id, v_etat_stock_tmp.store_id;
 
 
 ALTER TABLE public.v_etat_stock OWNER TO postgres;
@@ -969,43 +923,179 @@ CREATE VIEW public.v_global_sales AS
 ALTER TABLE public.v_global_sales OWNER TO postgres;
 
 --
+-- Name: v_mouvement; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_mouvement AS
+ SELECT mouvement.transaction_date,
+    COALESCE(sum((mouvement.sale)::numeric), (0)::numeric) AS sale,
+    COALESCE(sum((mouvement.purchase)::numeric), (0)::numeric) AS purchase,
+    COALESCE(sum((mouvement.transfer)::numeric), (0)::numeric) AS transfer,
+    COALESCE(sum((mouvement.reception)::numeric), (0)::numeric) AS reception
+   FROM public.mouvement
+  GROUP BY mouvement.transaction_date;
+
+
+ALTER TABLE public.v_mouvement OWNER TO postgres;
+
+--
+-- Name: v_monthly_mvt_tmp; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_monthly_mvt_tmp AS
+ SELECT EXTRACT(month FROM v_mouvement.transaction_date) AS month,
+    EXTRACT(year FROM v_mouvement.transaction_date) AS year,
+    COALESCE(sum(v_mouvement.sale), (0)::numeric) AS sale,
+    COALESCE(sum(v_mouvement.purchase), (0)::numeric) AS purchase,
+    COALESCE(sum(v_mouvement.transfer), (0)::numeric) AS transfer,
+    COALESCE(sum(v_mouvement.reception), (0)::numeric) AS reception
+   FROM public.v_mouvement
+  GROUP BY (EXTRACT(year FROM v_mouvement.transaction_date)), (EXTRACT(month FROM v_mouvement.transaction_date));
+
+
+ALTER TABLE public.v_monthly_mvt_tmp OWNER TO postgres;
+
+--
+-- Name: v_mouvement_tmp; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_mouvement_tmp AS
+ SELECT mouvement.transaction_date,
+    mouvement.store_id,
+    COALESCE(sum((mouvement.sale)::numeric), (0)::numeric) AS sale,
+    COALESCE(sum((mouvement.purchase)::numeric), (0)::numeric) AS purchase,
+    COALESCE(sum((mouvement.transfer)::numeric), (0)::numeric) AS transfer,
+    COALESCE(sum((mouvement.reception)::numeric), (0)::numeric) AS reception
+   FROM public.mouvement
+  GROUP BY mouvement.transaction_date, mouvement.store_id;
+
+
+ALTER TABLE public.v_mouvement_tmp OWNER TO postgres;
+
+--
+-- Name: v_sales_store_tmp; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_sales_store_tmp AS
+ SELECT v_mouvement_tmp.store_id,
+    EXTRACT(month FROM v_mouvement_tmp.transaction_date) AS month,
+    EXTRACT(year FROM v_mouvement_tmp.transaction_date) AS year,
+    COALESCE(sum(v_mouvement_tmp.sale), (0)::numeric) AS sale
+   FROM public.v_mouvement_tmp
+  WHERE (v_mouvement_tmp.sale <> (0)::numeric)
+  GROUP BY (EXTRACT(year FROM v_mouvement_tmp.transaction_date)), (EXTRACT(month FROM v_mouvement_tmp.transaction_date)), v_mouvement_tmp.store_id;
+
+
+ALTER TABLE public.v_sales_store_tmp OWNER TO postgres;
+
+--
+-- Name: v_sales_store; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_sales_store AS
+ SELECT v_sales_store_tmp.store_id,
+    v_sales_store_tmp.month,
+    v_sales_store_tmp.year,
+    v_sales_store_tmp.sale,
+    public.getcommissionamount(v_sales_store_tmp.sale) AS commission
+   FROM public.v_sales_store_tmp;
+
+
+ALTER TABLE public.v_sales_store OWNER TO postgres;
+
+--
+-- Name: v_monthly_sales_store; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_monthly_sales_store AS
+ SELECT v_sales_store.year,
+    v_sales_store.month,
+    COALESCE(sum(v_sales_store.sale), (0)::numeric) AS sale,
+    COALESCE(sum(v_sales_store.commission), (0)::numeric) AS commission
+   FROM public.v_sales_store
+  GROUP BY v_sales_store.year, v_sales_store.month;
+
+
+ALTER TABLE public.v_monthly_sales_store OWNER TO postgres;
+
+--
+-- Name: v_monthly_mvt; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_monthly_mvt AS
+ SELECT v.month,
+    v.year,
+    v.sale,
+    v.purchase,
+    v.transfer,
+    v.reception,
+    (v.transfer - v.reception) AS loss,
+    s.commission,
+    ((v.sale + v.reception) - ((v.purchase + v.transfer) + s.commission)) AS profit
+   FROM (public.v_monthly_mvt_tmp v
+     JOIN public.v_monthly_sales_store s ON (((v.month = s.month) AND (v.year = s.year))));
+
+
+ALTER TABLE public.v_monthly_mvt OWNER TO postgres;
+
+--
+-- Name: v_profit_sales; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_profit_sales AS
+ SELECT (m.month_number)::numeric AS month,
+    s.year,
+    s.sale,
+    s.purchase,
+    s.loss,
+    s.commission,
+    s.profit
+   FROM (public.month m
+     LEFT JOIN public.v_monthly_mvt s ON (((m.month_number)::numeric = s.month)));
+
+
+ALTER TABLE public.v_profit_sales OWNER TO postgres;
+
+--
 -- Name: v_reception; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.v_reception AS
- SELECT reception.laptop_id,
+ SELECT reception.transfer_id,
     reception.store_id AS receiver,
     COALESCE(sum((reception.qtt)::integer), (0)::bigint) AS qtt
    FROM public.reception
-  GROUP BY reception.laptop_id, reception.store_id;
+  GROUP BY reception.transfer_id, reception.store_id;
 
 
 ALTER TABLE public.v_reception OWNER TO postgres;
 
 --
--- Name: v_transfer; Type: VIEW; Schema: public; Owner: postgres
+-- Name: v_transfer_reception; Type: VIEW; Schema: public; Owner: postgres
 --
 
-CREATE VIEW public.v_transfer AS
- SELECT transfer.laptop_id,
-    transfer.store_to AS receiver,
-    COALESCE(sum((transfer.qtt)::integer), (0)::bigint) AS qtt
-   FROM public.transfer
-  GROUP BY transfer.laptop_id, transfer.store_to;
+CREATE VIEW public.v_transfer_reception AS
+ SELECT t.id AS transfer_id,
+    t.stock_id,
+    COALESCE(t.store_to, r.receiver) AS receiver,
+    (COALESCE((t.qtt)::integer, 0) - COALESCE(r.qtt, (0)::bigint)) AS qtt
+   FROM (public.transfer t
+     FULL JOIN public.v_reception r ON (((t.id = r.transfer_id) AND (t.store_to = r.receiver))));
 
 
-ALTER TABLE public.v_transfer OWNER TO postgres;
+ALTER TABLE public.v_transfer_reception OWNER TO postgres;
 
 --
 -- Name: v_received; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.v_received AS
- SELECT COALESCE(t.laptop_id, r.laptop_id) AS laptop_id,
-    COALESCE(t.receiver, r.receiver) AS receiver,
-    (COALESCE(t.qtt, (0)::bigint) - COALESCE(r.qtt, (0)::bigint)) AS qtt
-   FROM (public.v_transfer t
-     FULL JOIN public.v_reception r ON (((t.laptop_id = r.laptop_id) AND (t.receiver = r.receiver))));
+ SELECT t.transfer_id,
+    s.laptop_id,
+    t.receiver,
+    t.qtt
+   FROM (public.v_transfer_reception t
+     LEFT JOIN public.stock s ON ((t.stock_id = s.id)));
 
 
 ALTER TABLE public.v_received OWNER TO postgres;
@@ -1015,7 +1105,7 @@ ALTER TABLE public.v_received OWNER TO postgres;
 --
 
 CREATE VIEW public.v_received_search AS
- SELECT l.id,
+ SELECT r.transfer_id AS id,
     l.model_id,
     l.sales_price,
     l.model_name,
@@ -1027,13 +1117,82 @@ CREATE VIEW public.v_received_search AS
     l.screen_size,
     r.receiver AS store_id,
     r.qtt,
-    r.laptop_id
+    r.laptop_id,
+    r.transfer_id
    FROM (public.v_received r
      JOIN public.v_laptop_search l ON ((r.laptop_id = l.id)))
   WHERE (r.qtt <> 0);
 
 
 ALTER TABLE public.v_received_search OWNER TO postgres;
+
+--
+-- Name: v_transfer_out; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_transfer_out AS
+ SELECT transfer.store_from AS store_id,
+    transfer.stock_id,
+    COALESCE(sum((transfer.qtt)::integer), (0)::bigint) AS qtt_out
+   FROM public.transfer
+  GROUP BY transfer.store_from, transfer.stock_id;
+
+
+ALTER TABLE public.v_transfer_out OWNER TO postgres;
+
+--
+-- Name: v_stock_totransfer; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_stock_totransfer AS
+ SELECT s.id,
+    s.id AS stock_id,
+    s.store_id,
+    s.laptop_id,
+    ((s.qtt_in)::integer - COALESCE(t.qtt_out, (0)::bigint)) AS qtt
+   FROM (public.stock s
+     LEFT JOIN public.v_transfer_out t ON (((s.id = t.stock_id) AND (s.store_id = t.store_id))))
+  WHERE ((s.qtt_in)::integer <> 0);
+
+
+ALTER TABLE public.v_stock_totransfer OWNER TO postgres;
+
+--
+-- Name: v_stock_totransfer_search; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_stock_totransfer_search AS
+ SELECT s.id,
+    s.stock_id,
+    s.store_id,
+    s.laptop_id,
+    s.qtt,
+    l.model_name,
+    l.brand_id,
+    l.brand_name,
+    l.cpu_name,
+    l.ram_size,
+    l.disk_size
+   FROM (public.v_stock_totransfer s
+     JOIN public.v_laptop_search l ON ((s.laptop_id = l.id)));
+
+
+ALTER TABLE public.v_stock_totransfer_search OWNER TO postgres;
+
+--
+-- Name: v_store_commission; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_store_commission AS
+ SELECT v.store_id,
+    v.month,
+    v.year,
+    COALESCE(v.sale, (0)::numeric) AS sale,
+    COALESCE(v.commission, (0)::numeric) AS commission
+   FROM public.v_sales_store v;
+
+
+ALTER TABLE public.v_store_commission OWNER TO postgres;
 
 --
 -- Name: v_store_sales; Type: VIEW; Schema: public; Owner: postgres
@@ -1056,6 +1215,13 @@ ALTER TABLE public.v_store_sales OWNER TO postgres;
 --
 
 ALTER TABLE ONLY public.brand ALTER COLUMN id SET DEFAULT nextval('public.brand_id_seq'::regclass);
+
+
+--
+-- Name: commission_level id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.commission_level ALTER COLUMN id SET DEFAULT nextval('public.commission_level_id_seq'::regclass);
 
 
 --
@@ -1150,13 +1316,6 @@ ALTER TABLE ONLY public.storecategory ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- Name: transaction_type id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.transaction_type ALTER COLUMN id SET DEFAULT nextval('public.transaction_type_id_seq'::regclass);
-
-
---
 -- Name: transfer id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -1168,13 +1327,24 @@ ALTER TABLE ONLY public.transfer ALTER COLUMN id SET DEFAULT nextval('public.tra
 --
 
 COPY public.brand (id, brand_name) FROM stdin;
-3	Dell
-4	Apple
-5	Hp
-6	Lenovo
-7	FUJITSU
-9	MSI
-10	Toshiba
+1	Dell
+2	Apple
+3	Hp
+4	Lenovo
+5	FUJITSU
+6	MSI
+7	Toshiba
+\.
+
+
+--
+-- Data for Name: commission_level; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.commission_level (id, min, max, commission) FROM stdin;
+1	0.00	2000000.00	3.00
+2	2000000.00	5000000.00	8.00
+3	5000000.00	300000000.00	15.00
 \.
 
 
@@ -1183,11 +1353,11 @@ COPY public.brand (id, brand_name) FROM stdin;
 --
 
 COPY public.cpu (id, cpu_name) FROM stdin;
-10	Intel Core i7
-11	Intel Core i5
-12	Intel Core i9
-13	Apple M1
-14	AMD Ryzen 7
+1	Intel Core i7
+2	Intel Core i5
+3	Intel Core i9
+5	AMD Ryzen 7
+4	Apple M1
 \.
 
 
@@ -1196,10 +1366,10 @@ COPY public.cpu (id, cpu_name) FROM stdin;
 --
 
 COPY public.employee (id, profil_id, firstname, lastname, birthday, email, passwd, store_id) FROM stdin;
-3	1	Admin	User	1980-10-10	admin@example.com	$2a$06$BVSD68m3GkE4zSqtvo7iwu1RFfYzuutMThmt55fnR4YSk0YTUeKGG	1
-1	2	John	Doe	1990-01-01	johndoe@example.com	$2a$06$wiuPSZMCx..LYNkuC2SJpuyAgjhXym2fhxtq7R6eOQ.tx1gu0bDSK	3
-2	2	Jane	Doe	1985-05-05	janedoe@example.com	$2a$06$3r.CWz1F6J9h4bnIF5oyvuZ2l3RHpn/WOky0D.ihPEoTpk16Z9K1u	4
-4	2	Jack	Doe	1989-03-01	jackdoe@example.com	$2a$06$/IfO3r8KS7l.qJ0EVFpQ2.zhyAa51iK8kYfctIXHPms.Is5iQXyIu	5
+1	1	Admin	User	1980-10-10	admin@example.com	$2a$06$Nqwc2WiotnOxuihFsIXw/OV.W8rtBVqVylceANn6FNeekPhh0WDe6	1
+2	2	Jack	Doe	1989-03-01	jackdoe@example.com	$2a$06$ko3zo4yLI5qceF8LBcVZ8uV2gyC1Fq9icibLJcOsmi9p/R.1RvMse	2
+3	2	John	Doe	1990-01-01	johndoe@example.com	$2a$06$xGpUQkKmRvTmYoQHenRP2.wjPFPwBTXBExBrdRBYvxVKTkKjF7vhm	3
+4	2	Jane	Doe	1985-05-05	janedoe@example.com	$2a$06$1ds2yQh/76uovt090ddnxu/n0WjqcCVr2q/vZ0FR6p04c/vl4FNgC	4
 \.
 
 
@@ -1208,16 +1378,16 @@ COPY public.employee (id, profil_id, firstname, lastname, birthday, email, passw
 --
 
 COPY public.laptop (id, model_id, sales_price) FROM stdin;
-1	2	1875000.00
-2	3	2500000.00
-3	4	3375000.00
-4	5	2125000.00
-5	6	2750000.00
-7	7	3750000.00
-8	8	2375000.00
-9	9	3000000.00
-10	10	4125000.00
-11	11	2625000.00
+1	11	1875000.00
+2	12	2500000.00
+3	13	3375000.00
+4	14	2125000.00
+5	15	2750000.00
+6	16	3750000.00
+7	17	2375000.00
+8	18	3000000.00
+9	19	4125000.00
+10	20	2625000.00
 \.
 
 
@@ -1227,18 +1397,9 @@ COPY public.laptop (id, model_id, sales_price) FROM stdin;
 
 COPY public.location (id, location_name) FROM stdin;
 1	Analamanga
-2	Ambohidratrimo
-3	Andramasina
-4	Antananarivo Renivohitra
-5	Antehiroka
-6	Antsahavola
-7	Antsakaviro
-8	Antsampandrano
-9	Behoririka
-10	Isoraka
-12	Tamatave
-13	Fianarantsoa
-14	Majunga
+2	Tamatave
+3	Fianarantsoa
+4	Majunga
 \.
 
 
@@ -1247,16 +1408,16 @@ COPY public.location (id, location_name) FROM stdin;
 --
 
 COPY public.model (id, brand_id, model_name, cpu_id, screen_size, ram_size, disk_size) FROM stdin;
-2	3	1D	10	13.30	16	512
-3	4	2A	13	13.30	8	256
-4	5	3H	10	15.60	16	1000
-5	6	4L	11	14.00	8	256
-6	7	5F	14	14.00	16	512
-7	4	6A	11	14.00	8	512
-8	9	7M	12	15.60	32	1000
-9	9	8M	11	13.50	8	128
-10	10	9T	10	13.30	16	512
-11	6	10L	10	14.00	16	1000
+11	1	1D	1	13.30	16	512
+12	2	2A	4	13.30	8	256
+13	3	3H	1	15.60	16	1000
+14	4	4L	2	14.00	8	256
+15	5	5F	5	14.00	16	512
+16	2	6A	2	14.00	8	512
+17	6	7M	3	15.60	32	1000
+18	6	8M	2	13.50	8	128
+19	7	9T	1	13.30	16	512
+20	4	10L	1	14.00	16	1000
 \.
 
 
@@ -1284,17 +1445,32 @@ COPY public.month (month_number, month_name) FROM stdin;
 -- Data for Name: mouvement; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.mouvement (id, price, transaction_id, transaction_date) FROM stdin;
-1	75000000.00	2	2019-05-21
-2	50000000.00	2	2019-05-21
-3	81000000.00	2	2019-05-21
-4	30600000.00	2	2019-05-21
-5	143000000.00	2	2019-05-21
-6	126000000.00	2	2019-05-21
-7	106400000.00	2	2019-05-21
-8	105600000.00	2	2019-05-21
-9	244200000.00	2	2019-05-21
-10	42000000.00	2	2019-05-21
+COPY public.mouvement (id, sale, purchase, transfer, reception, store_id, transaction_date) FROM stdin;
+1	0.00	75000000.00	0.00	0.00	\N	2019-05-25
+2	0.00	50000000.00	0.00	0.00	\N	2019-05-25
+3	0.00	81000000.00	0.00	0.00	\N	2019-05-25
+4	0.00	30600000.00	0.00	0.00	\N	2019-05-25
+5	0.00	143000000.00	0.00	0.00	\N	2019-05-25
+6	0.00	126000000.00	0.00	0.00	\N	2019-05-25
+7	0.00	106400000.00	0.00	0.00	\N	2019-05-25
+8	0.00	105600000.00	0.00	0.00	\N	2019-05-25
+9	0.00	244200000.00	0.00	0.00	\N	2019-05-25
+10	0.00	42000000.00	0.00	0.00	\N	2019-05-25
+16	0.00	0.00	15000000.00	0.00	1	2020-05-02
+17	0.00	0.00	81000000.00	0.00	1	2022-06-14
+18	0.00	0.00	50000000.00	0.00	1	2021-05-05
+19	0.00	0.00	36000000.00	0.00	1	2021-09-10
+20	0.00	0.00	99000000.00	0.00	1	2023-05-02
+21	0.00	0.00	0.00	12000000.00	2	2020-05-04
+22	0.00	0.00	0.00	67500000.00	4	2022-06-29
+23	0.00	0.00	0.00	50000000.00	3	2021-05-08
+24	0.00	0.00	0.00	36000000.00	3	2021-09-16
+25	0.00	0.00	0.00	96800000.00	3	2023-05-10
+26	1875000.00	0.00	0.00	0.00	2	2020-05-10
+27	57375000.00	0.00	0.00	0.00	4	2022-07-05
+28	55000000.00	0.00	0.00	0.00	3	2021-05-14
+29	3750000.00	0.00	0.00	0.00	3	2021-09-22
+30	82500000.00	0.00	0.00	0.00	3	2023-05-16
 \.
 
 
@@ -1313,16 +1489,16 @@ COPY public.profil (id, profil_name, profil_level) FROM stdin;
 --
 
 COPY public.purchase (id, laptop_id, qtt, purchase_price, purchase_date, employee_id) FROM stdin;
-1	1	50	1500000.00	2019-05-21	3
-2	2	25	2000000.00	2019-05-21	3
-3	3	30	2700000.00	2019-05-21	3
-4	4	18	1700000.00	2019-05-21	3
-5	5	65	2200000.00	2019-05-21	3
-6	7	42	3000000.00	2019-05-21	3
-7	8	56	1900000.00	2019-05-21	3
-8	9	44	2400000.00	2019-05-21	3
-9	10	74	3300000.00	2019-05-21	3
-10	11	20	2100000.00	2019-05-21	3
+1	1	50	1500000.00	2019-05-25	1
+2	2	25	2000000.00	2019-05-25	1
+3	3	30	2700000.00	2019-05-25	1
+4	4	18	1700000.00	2019-05-25	1
+5	5	65	2200000.00	2019-05-25	1
+6	6	42	3000000.00	2019-05-25	1
+7	7	56	1900000.00	2019-05-25	1
+8	8	44	2400000.00	2019-05-25	1
+9	9	74	3300000.00	2019-05-25	1
+10	10	20	2100000.00	2019-05-25	1
 \.
 
 
@@ -1330,7 +1506,12 @@ COPY public.purchase (id, laptop_id, qtt, purchase_price, purchase_date, employe
 -- Data for Name: reception; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.reception (id, reception_date, employee_id, store_id, laptop_id, qtt) FROM stdin;
+COPY public.reception (id, reception_date, employee_id, store_id, transfer_id, qtt) FROM stdin;
+1	2020-05-04	2	2	6	8
+2	2022-06-29	4	4	7	25
+3	2021-05-08	3	3	8	25
+4	2021-09-16	3	3	9	12
+5	2023-05-10	3	3	10	44
 \.
 
 
@@ -1339,6 +1520,11 @@ COPY public.reception (id, reception_date, employee_id, store_id, laptop_id, qtt
 --
 
 COPY public.sale (id, laptop_id, qtt, purchase_date, purchase_price, store_id) FROM stdin;
+1	1	1	2020-05-10	1875000.00	2
+2	3	17	2022-07-05	3375000.00	4
+3	2	22	2021-05-14	2500000.00	3
+4	6	1	2021-09-22	3750000.00	3
+5	5	30	2023-05-16	2750000.00	3
 \.
 
 
@@ -1346,17 +1532,32 @@ COPY public.sale (id, laptop_id, qtt, purchase_date, purchase_price, store_id) F
 -- Data for Name: stock; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.stock (id, transaction_date, store_id, laptop_id, qtt, transaction_id) FROM stdin;
-1	2019-05-21	1	1	50	1
-2	2019-05-21	1	2	25	1
-3	2019-05-21	1	3	30	1
-4	2019-05-21	1	4	18	1
-5	2019-05-21	1	5	65	1
-6	2019-05-21	1	7	42	1
-7	2019-05-21	1	8	56	1
-8	2019-05-21	1	9	44	1
-9	2019-05-21	1	10	74	1
-10	2019-05-21	1	11	20	1
+COPY public.stock (id, transaction_date, store_id, laptop_id, qtt_in, qtt_out, price) FROM stdin;
+3	2019-05-25	1	1	50	0	1500000.00
+4	2019-05-25	1	2	25	0	2000000.00
+5	2019-05-25	1	3	30	0	2700000.00
+6	2019-05-25	1	4	18	0	1700000.00
+7	2019-05-25	1	5	65	0	2200000.00
+8	2019-05-25	1	6	42	0	3000000.00
+9	2019-05-25	1	7	56	0	1900000.00
+10	2019-05-25	1	8	44	0	2400000.00
+11	2019-05-25	1	9	74	0	3300000.00
+12	2019-05-25	1	10	20	0	2100000.00
+18	2020-05-02	1	1	0	10	1500000.00
+19	2022-06-14	1	3	0	30	2700000.00
+20	2021-05-05	1	2	0	25	2000000.00
+21	2021-09-10	1	6	0	12	3000000.00
+22	2023-05-02	1	5	0	45	2200000.00
+23	2020-05-04	2	1	8	0	1500000.00
+24	2022-06-29	4	3	25	0	2700000.00
+25	2021-05-08	3	2	25	0	2000000.00
+26	2021-09-16	3	6	12	0	3000000.00
+27	2023-05-10	3	5	44	0	2200000.00
+28	2020-05-10	2	1	0	1	1875000.00
+29	2022-07-05	4	3	0	17	3375000.00
+30	2021-05-14	3	2	0	22	2500000.00
+31	2021-09-22	3	6	0	1	3750000.00
+32	2023-05-16	3	5	0	30	2750000.00
 \.
 
 
@@ -1365,10 +1566,10 @@ COPY public.stock (id, transaction_date, store_id, laptop_id, qtt, transaction_i
 --
 
 COPY public.store (id, category_id, location_id, store_name) FROM stdin;
-1	1	1	Mikolo centrale
-3	2	12	Mikolo Tamatave
-4	2	13	Mikolo Fianarantsoa
-5	2	14	Mikolo Majunga
+1	1	1	Mikolo Centrale
+2	2	2	Mikolo Tamatave
+3	2	3	Mikolo Fianarantsoa
+4	2	4	Mikolo Majunga
 \.
 
 
@@ -1383,20 +1584,15 @@ COPY public.storecategory (id, category_name, category_level) FROM stdin;
 
 
 --
--- Data for Name: transaction_type; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.transaction_type (id, transaction_name, transaction_level) FROM stdin;
-1	Input	10
-2	output	-10
-\.
-
-
---
 -- Data for Name: transfer; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.transfer (id, transfer_date, employee_id, store_to, store_from, laptop_id, qtt) FROM stdin;
+COPY public.transfer (id, transfer_date, employee_id, store_to, store_from, stock_id, qtt) FROM stdin;
+6	2020-05-02	1	2	1	3	10
+7	2022-06-14	1	4	1	5	30
+8	2021-05-05	1	3	1	4	25
+9	2021-09-10	1	3	1	8	12
+10	2023-05-02	1	3	1	7	45
 \.
 
 
@@ -1404,14 +1600,21 @@ COPY public.transfer (id, transfer_date, employee_id, store_to, store_from, lapt
 -- Name: brand_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.brand_id_seq', 11, true);
+SELECT pg_catalog.setval('public.brand_id_seq', 7, true);
+
+
+--
+-- Name: commission_level_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.commission_level_id_seq', 3, true);
 
 
 --
 -- Name: cpu_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.cpu_id_seq', 14, true);
+SELECT pg_catalog.setval('public.cpu_id_seq', 5, true);
 
 
 --
@@ -1425,35 +1628,35 @@ SELECT pg_catalog.setval('public.employee_id_seq', 4, true);
 -- Name: laptop_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.laptop_id_seq', 11, true);
+SELECT pg_catalog.setval('public.laptop_id_seq', 1, false);
 
 
 --
 -- Name: location_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.location_id_seq', 14, true);
+SELECT pg_catalog.setval('public.location_id_seq', 4, true);
 
 
 --
 -- Name: model_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.model_id_seq', 11, true);
+SELECT pg_catalog.setval('public.model_id_seq', 1, false);
 
 
 --
 -- Name: mouvement_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.mouvement_id_seq', 10, true);
+SELECT pg_catalog.setval('public.mouvement_id_seq', 30, true);
 
 
 --
 -- Name: profil_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.profil_id_seq', 1, false);
+SELECT pg_catalog.setval('public.profil_id_seq', 2, true);
 
 
 --
@@ -1467,28 +1670,28 @@ SELECT pg_catalog.setval('public.purchase_id_seq', 10, true);
 -- Name: reception_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.reception_id_seq', 1, false);
+SELECT pg_catalog.setval('public.reception_id_seq', 5, true);
 
 
 --
 -- Name: sale_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.sale_id_seq', 1, false);
+SELECT pg_catalog.setval('public.sale_id_seq', 5, true);
 
 
 --
 -- Name: stock_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.stock_id_seq', 10, true);
+SELECT pg_catalog.setval('public.stock_id_seq', 32, true);
 
 
 --
 -- Name: store_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.store_id_seq', 5, true);
+SELECT pg_catalog.setval('public.store_id_seq', 4, true);
 
 
 --
@@ -1499,17 +1702,10 @@ SELECT pg_catalog.setval('public.storecategory_id_seq', 1, false);
 
 
 --
--- Name: transaction_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.transaction_type_id_seq', 1, false);
-
-
---
 -- Name: transfer_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.transfer_id_seq', 1, false);
+SELECT pg_catalog.setval('public.transfer_id_seq', 10, true);
 
 
 --
@@ -1526,6 +1722,14 @@ ALTER TABLE ONLY public.brand
 
 ALTER TABLE ONLY public.brand
     ADD CONSTRAINT brand_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: commission_level commission_level_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.commission_level
+    ADD CONSTRAINT commission_level_pkey PRIMARY KEY (id);
 
 
 --
@@ -1721,30 +1925,6 @@ ALTER TABLE ONLY public.storecategory
 
 
 --
--- Name: transaction_type transaction_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.transaction_type
-    ADD CONSTRAINT transaction_type_pkey PRIMARY KEY (id);
-
-
---
--- Name: transaction_type transaction_type_transaction_level_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.transaction_type
-    ADD CONSTRAINT transaction_type_transaction_level_key UNIQUE (transaction_level);
-
-
---
--- Name: transaction_type transaction_type_transaction_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.transaction_type
-    ADD CONSTRAINT transaction_type_transaction_name_key UNIQUE (transaction_name);
-
-
---
 -- Name: transfer transfer_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1793,11 +1973,11 @@ ALTER TABLE ONLY public.model
 
 
 --
--- Name: mouvement mouvement_transaction_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: mouvement mouvement_store_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.mouvement
-    ADD CONSTRAINT mouvement_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transaction_type(id);
+    ADD CONSTRAINT mouvement_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.store(id);
 
 
 --
@@ -1825,19 +2005,19 @@ ALTER TABLE ONLY public.reception
 
 
 --
--- Name: reception reception_laptop_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.reception
-    ADD CONSTRAINT reception_laptop_id_fkey FOREIGN KEY (laptop_id) REFERENCES public.laptop(id);
-
-
---
 -- Name: reception reception_store_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.reception
     ADD CONSTRAINT reception_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.store(id);
+
+
+--
+-- Name: reception reception_transfer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.reception
+    ADD CONSTRAINT reception_transfer_id_fkey FOREIGN KEY (transfer_id) REFERENCES public.transfer(id);
 
 
 --
@@ -1873,14 +2053,6 @@ ALTER TABLE ONLY public.stock
 
 
 --
--- Name: stock stock_transaction_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.stock
-    ADD CONSTRAINT stock_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transaction_type(id);
-
-
---
 -- Name: store store_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1905,11 +2077,11 @@ ALTER TABLE ONLY public.transfer
 
 
 --
--- Name: transfer transfer_laptop_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: transfer transfer_stock_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.transfer
-    ADD CONSTRAINT transfer_laptop_id_fkey FOREIGN KEY (laptop_id) REFERENCES public.laptop(id);
+    ADD CONSTRAINT transfer_stock_id_fkey FOREIGN KEY (stock_id) REFERENCES public.stock(id);
 
 
 --

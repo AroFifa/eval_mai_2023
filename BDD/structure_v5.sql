@@ -409,7 +409,7 @@ and purchase_price
 between COALESCE(1500,0) AND COALESCE(8000000,CAST('infinity' AS numeric)); 
 
 
--- pg_dump -U postgres -d eval_v3 -f backup.sql
+-- pg_dump -U postgres -d eval_v5 -f backup.sql
 
 
 
