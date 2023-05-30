@@ -161,7 +161,7 @@ export const getBrands = async () => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -173,7 +173,7 @@ export const getCpus = async () => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -185,7 +185,7 @@ export const getLocations = async () => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -206,7 +206,7 @@ export const getModelsByBrand = async (brand_id) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -227,7 +227,7 @@ export const getLaptopsByBrand = async (brand_id) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -244,7 +244,7 @@ export const saveLaptop = async (prix, model_id) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -266,7 +266,7 @@ export const saveSalespoint = async (location_id, name) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -292,7 +292,7 @@ export const updateLaptop = async (id, prix, model_id) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -312,7 +312,7 @@ export const searchLaptop = async (q) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -328,7 +328,7 @@ export const searchEmployees = async (q) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -349,7 +349,7 @@ export const affectEmployee = async (id, store_id) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -361,7 +361,7 @@ export const getSalesPoint = async () => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -387,7 +387,7 @@ export const purchaseLaptop = async (date, laptop_id, qtt, prix) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -411,7 +411,7 @@ export const purchaseLaptops = async (date, purchaseItems) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -429,7 +429,7 @@ export const getStockToTransfer = async (q) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -447,7 +447,7 @@ export const searchStocks = async (q) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -465,7 +465,7 @@ export const filterReception = async () => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -493,7 +493,7 @@ export const sendLaptops = async (isTransfer, date, store_id, transferItems) => 
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -520,7 +520,7 @@ export const saleLaptops = async (date, transferItems) => {
   );
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -548,7 +548,7 @@ export const receiveLaptops = async (isTransfer, date, transferItems) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -564,7 +564,7 @@ export const searchSalespoint = async (q) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -587,7 +587,7 @@ export const updateSalespoint = async (id, location_id, name) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -607,7 +607,7 @@ export const getStats = async (minYear, maxYear, field, url) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -625,7 +625,7 @@ export const getSales = async (model_name, minPrice, maxPrice) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -646,7 +646,7 @@ export const getModel = async (model_name) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -667,7 +667,7 @@ export const getCpu = async (name) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -688,7 +688,7 @@ export const searchBrands = async (name) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -709,7 +709,7 @@ export const saveModel = async (brand_id, name, cpu_id, screen, ram, disk) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -729,7 +729,7 @@ export const saveCPU = async (cpu_name) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -749,7 +749,7 @@ export const saveBrand = async (brand_name) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -779,7 +779,7 @@ export const updateModel = async (id, brand_id, name, cpu_id, screen, ram, disk)
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -799,7 +799,7 @@ export const updateCpus = async (id, name) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -824,7 +824,7 @@ export const updateBrand = async (id, name) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -844,7 +844,7 @@ export const getStoreCommissions = async (month, year) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -856,7 +856,7 @@ export const getCommissions = async () => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -868,7 +868,7 @@ export const getMonths = async () => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -891,7 +891,7 @@ export const updateCommission = async (id, min, max, commission) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -918,7 +918,7 @@ export const saveCommissions = async (min, max, commission) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 
@@ -935,7 +935,7 @@ export const delCommission = async (id) => {
 
   const data = await response.json();
 
-  if (data.error in data) {
+  if (data.error) {
     throw new Error(data.message);
   }
 

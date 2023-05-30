@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { NumericFormat } from "react-number-format";
 import point_ventes_routes from "routes/point_ventes";
 import { getSales } from "routes/ws_call";
+import clsx from "clsx";
 
 export default function ListSales() {
   const q = useRef();
@@ -62,6 +63,17 @@ export default function ListSales() {
       renderCell: (params) => {
         return format(params.value);
       },
+      cellClassName: (params) => {
+        if (params.value == null) {
+          return "";
+        }
+
+        return clsx("cell", {
+          m1: params.value > 1000000 && params.value < 2000000,
+          m2: params.value > 2000000 && params.value < 3000000,
+          m3: params.value > 3000000,
+        });
+      },
     },
     { field: "qtt", headerName: "Qtt", width: 50 },
   ];
@@ -89,7 +101,26 @@ export default function ListSales() {
             Liste des ventes
           </MKTypography>
         </Grid>
-        <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
+        <Grid
+          container
+          item
+          xs={12}
+          lg={7}
+          sx={{
+            mx: "auto",
+            "& .cell.m1": {
+              backgroundColor: "#ff943975",
+            },
+
+            "& .cell.m2": {
+              backgroundColor: "#ff94ff75",
+            },
+
+            "& .cell.m3": {
+              backgroundColor: "#12943975",
+            },
+          }}
+        >
           <Grid container style={{ marginBottom: "20px" }} spacing={2}>
             <Grid item xs={12} md={6}>
               <MKInput

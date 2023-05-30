@@ -32,11 +32,11 @@ import routesR from "routes/routes";
 import magasin_routes from "routes/magasin";
 import Signin from "pages/Authentication/Signin";
 import point_ventes_routes from "routes/point_ventes";
-import Template from "own/Template";
 import UpdateLaptop from "pages/Magasin/LapTop/Update";
 import UpdateSalespoint from "pages/Magasin/Salespoint/Update";
 import Reception from "pages/Magasin/Salespoint/Reception";
 import CustomPaginationGrid from "pages/Datagrid/CustomPagination";
+import CustomDataGrid from "pages/Datagrid/CustomDatagrid";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -74,7 +74,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/signin" />} />
 
         <Route path="/presentation" element={<Presentation />} />
-        <Route path="/index" element={<Template />} />
+        <Route path="/index" element={<CustomDataGrid />} />
         <Route path="/magasin/laptops/:id" element={<UpdateLaptop />} />
         <Route path="/datagrid/custompagination" element={<CustomPaginationGrid />} />
         <Route path="/magasin/salespoint/:id" element={<UpdateSalespoint />} />

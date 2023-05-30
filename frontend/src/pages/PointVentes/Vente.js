@@ -1,6 +1,5 @@
-import { Grid } from "@mui/material";
+import { Alert, Grid, Snackbar } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import MKAlert from "components/MKAlert";
 import MKBox from "components/MKBox";
 import MKButton from "components/MKButton";
 import MKInput from "components/MKInput";
@@ -14,6 +13,9 @@ import { saleLaptops } from "routes/ws_call";
 import { searchStocks } from "routes/ws_call";
 
 export default function Sale() {
+  const [snackbar, setSnackbar] = useState(null);
+  const handleCloseSnackbar = () => setSnackbar(null);
+
   const [selectedRows, setSelectedRows] = useState([]);
 
   const user = JSON.parse(sessionStorage.getItem("user"));
@@ -22,7 +24,6 @@ export default function Sale() {
   const brand = "Point de ventes";
   const smallbrand = user.store.store_name;
 
-  const [error, setError] = useState("");
   const qttRef = useRef([]);
   const dateRef = useRef();
 
@@ -34,6 +35,7 @@ export default function Sale() {
       const data = await searchStocks(q.current.value);
       setStocks(data);
     } catch (error) {
+      setSnackbar({ children: error.message, severity: "error" });
       console.error(error);
     }
   };
@@ -56,10 +58,12 @@ export default function Sale() {
 
     await saleLaptops(dateRef.current.value, transferItems)
       .then(() => {
+        setSnackbar({ children: "Vente effectué", severity: "success" });
+
         fetchData();
       })
       .catch((e) => {
-        setError(e.message);
+        setSnackbar({ children: e.message, severity: "error" });
       });
   };
 
@@ -189,12 +193,21 @@ export default function Sale() {
               </MKButton>
             </Grid>
           </form>
-          <MKBox mb={2}>{error ? <MKAlert color="error">{error}</MKAlert> : <></>}</MKBox>
         </Grid>
       </MKBox>
       <MKBox pt={6} px={1} mt={6}>
         <SimpleFooter />
       </MKBox>
+      {!!snackbar && (
+        <Snackbar
+          open
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          onClose={handleCloseSnackbar}
+          autoHideDuration={6000}
+        >
+          <Alert {...snackbar} onClose={handleCloseSnackbar} />
+        </Snackbar>
+      )}
     </>
   );
 }

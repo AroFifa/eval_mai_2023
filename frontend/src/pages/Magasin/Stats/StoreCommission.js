@@ -9,6 +9,7 @@ import {
   ValueAxis,
   ZoomAndPan,
 } from "@devexpress/dx-react-chart-material-ui";
+
 import { Container, Grid, Paper, lighten } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import MKBox from "components/MKBox";
