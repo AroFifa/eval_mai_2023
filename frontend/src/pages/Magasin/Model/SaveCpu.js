@@ -11,7 +11,6 @@ import MKTypography from "components/MKTypography";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
 import magasin_routes from "routes/magasin";
 import SimpleFooter from "examples/Footers/SimpleFooter";
-import MKAlert from "components/MKAlert";
 import MKInput from "components/MKInput";
 import { saveCPU } from "routes/ws_call";
 import { getCpu } from "routes/ws_call";
@@ -43,6 +42,8 @@ export default function SaveCpu() {
       const cpus = await getCpu(q.current.value);
       setData(cpus);
     } catch (error) {
+      setSnackbar({ children: error, severity: "error" });
+
       console.error(error);
     }
   };
@@ -51,24 +52,23 @@ export default function SaveCpu() {
     fetchData();
   }, []);
 
-  console.log(data);
   function handleSearch() {
     fetchData();
   }
 
   const title = "Enregistrement d'un processeur";
 
-  const [error, setError] = useState("");
-
   const save = async (event) => {
     event.preventDefault();
 
     await saveCPU(inputRef.current.value)
       .then(() => {
+        setSnackbar({ children: "Processeur créé", severity: "success" });
+
         fetchData();
       })
       .catch((e) => {
-        setError(e.message);
+        setSnackbar({ children: e.message, severity: "error" });
       });
   };
 
@@ -106,7 +106,6 @@ export default function SaveCpu() {
                     </MKButton>
                   </Grid>
                 </MKBox>
-                <MKBox mb={2}>{error ? <MKAlert color="error">{error}</MKAlert> : <></>}</MKBox>
               </MKBox>
             </Grid>
             <Grid item xs={12} md={8}>

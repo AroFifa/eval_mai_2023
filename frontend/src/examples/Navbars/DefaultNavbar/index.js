@@ -42,6 +42,7 @@ import DefaultNavbarMobile from "examples/Navbars/DefaultNavbar/DefaultNavbarMob
 
 // Material Kit 2 React base styles
 import breakpoints from "assets/theme/base/breakpoints";
+import { Close, KeyboardArrowRight, Menu } from "@mui/icons-material";
 
 function DefaultNavbar({
   brand,
@@ -304,12 +305,10 @@ function DefaultNavbar({
               item.name
             )}
             {item.collapse && (
-              <Icon
+              <KeyboardArrowRight
                 fontSize="small"
                 sx={{ fontWeight: "normal", verticalAlign: "middle", mr: -0.5 }}
-              >
-                keyboard_arrow_right
-              </Icon>
+              />
             )}
           </MKTypography>
         );
@@ -438,12 +437,10 @@ function DefaultNavbar({
                       item.name
                     )}
                     {item.collapse && (
-                      <Icon
+                      <KeyboardArrowRight
                         fontSize="small"
                         sx={{ fontWeight: "normal", verticalAlign: "middle", mr: -0.5 }}
-                      >
-                        keyboard_arrow_right
-                      </Icon>
+                      />
                     )}
                   </MKTypography>
                 );
@@ -590,7 +587,7 @@ function DefaultNavbar({
             sx={{ cursor: "pointer" }}
             onClick={openMobileNavbar}
           >
-            <Icon fontSize="default">{mobileNavbar ? "close" : "menu"}</Icon>
+            {mobileNavbar ? <Close fontSize="default" /> : <Menu fontSize="default" />}
           </MKBox>
         </MKBox>
         <MKBox

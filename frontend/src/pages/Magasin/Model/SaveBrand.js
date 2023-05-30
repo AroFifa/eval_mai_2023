@@ -11,7 +11,6 @@ import MKTypography from "components/MKTypography";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
 import magasin_routes from "routes/magasin";
 import SimpleFooter from "examples/Footers/SimpleFooter";
-import MKAlert from "components/MKAlert";
 import MKInput from "components/MKInput";
 import { DataGrid } from "@mui/x-data-grid";
 import { searchBrands } from "routes/ws_call";
@@ -43,6 +42,8 @@ export default function SaveBrand() {
       const brands = await searchBrands(q.current.value);
       setData(brands);
     } catch (error) {
+      setSnackbar({ children: error, severity: "error" });
+
       console.error(error);
     }
   };
@@ -57,17 +58,17 @@ export default function SaveBrand() {
 
   const title = "Enregistrement d'un Marque";
 
-  const [error, setError] = useState("");
-
   const save = async (event) => {
     event.preventDefault();
 
     await saveBrand(inputRef.current.value)
       .then(() => {
+        setSnackbar({ children: "Marque enregistré", severity: "success" });
+
         fetchData();
       })
       .catch((e) => {
-        setError(e.message);
+        setSnackbar({ children: e.message, severity: "error" });
       });
   };
 
@@ -105,7 +106,6 @@ export default function SaveBrand() {
                     </MKButton>
                   </Grid>
                 </MKBox>
-                <MKBox mb={2}>{error ? <MKAlert color="error">{error}</MKAlert> : <></>}</MKBox>
               </MKBox>
             </Grid>
             <Grid item xs={12} md={8}>

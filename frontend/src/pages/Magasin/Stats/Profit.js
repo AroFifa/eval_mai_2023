@@ -9,7 +9,7 @@ import {
   ValueAxis,
   ZoomAndPan,
 } from "@devexpress/dx-react-chart-material-ui";
-import { Container, Grid, Paper } from "@mui/material";
+import { Container, Grid, Paper, lighten } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import MKBox from "components/MKBox";
 import MKInput from "components/MKInput";
@@ -21,6 +21,7 @@ import { NumericFormat } from "react-number-format";
 import magasin_routes from "routes/magasin";
 import { getStats } from "routes/ws_call";
 import CustomToolbar from "./CustomToolbar";
+import theme from "assets/theme";
 
 export default function Profit() {
   const [data, setData] = useState([]);
@@ -62,12 +63,23 @@ export default function Profit() {
       });
   }
   const columns = [
-    { field: "month_name", headerName: "Mois", width: 150 },
+    {
+      field: "month_name",
+      headerName: "Mois",
+      width: 150,
+      valueGetter: ({ row, value }) => {
+        if (row.id === "SUBTOTAL") {
+          return row.label;
+        }
+        return value;
+      },
+    },
     {
       field: "sale",
       headerName: "Vente",
       width: 200,
       renderCell: (params) => {
+        if (params.id === "SUBTOTAL") return format(params.row.sale);
         return format(params.value);
       },
     },
@@ -76,6 +88,7 @@ export default function Profit() {
       headerName: "Achat",
       width: 200,
       renderCell: (params) => {
+        if (params.id === "SUBTOTAL") return format(params.row.purchase);
         return format(params.value);
       },
     },
@@ -84,6 +97,7 @@ export default function Profit() {
       headerName: "Perte",
       width: 200,
       renderCell: (params) => {
+        if (params.id === "SUBTOTAL") return format(params.row.loss);
         return format(params.value);
       },
     },
@@ -92,6 +106,7 @@ export default function Profit() {
       headerName: "Commission",
       width: 200,
       renderCell: (params) => {
+        if (params.id === "SUBTOTAL") return format(params.row.commission);
         return format(params.value);
       },
     },
@@ -100,11 +115,12 @@ export default function Profit() {
       headerName: "Bénéfice",
       width: 200,
       renderCell: (params) => {
+        if (params.id === "SUBTOTAL") return format(params.row.profit);
         return format(params.value);
       },
     },
   ];
-  const rows = data.map((item) => ({
+  var rows = data.map((item) => ({
     id: item.id,
     month_name: item.month.month_name,
     sale: item.sale,
@@ -113,6 +129,31 @@ export default function Profit() {
     commission: item.commission,
     profit: item.profit,
   }));
+
+  const sum_sale = data.reduce((total, item) => total + item.sale, 0);
+  const sum_purchase = data.reduce((total, item) => total + item.purchase, 0);
+  const sum_loss = data.reduce((total, item) => total + item.loss, 0);
+  const sum_commission = data.reduce((total, item) => total + item.commission, 0);
+  const sum_profit = data.reduce((total, item) => total + item.profit, 0);
+  rows = [
+    ...rows,
+    {
+      id: "SUBTOTAL",
+      label: "Somme",
+      sale: sum_sale,
+      purchase: sum_purchase,
+      loss: sum_loss,
+      commission: sum_commission,
+      profit: sum_profit,
+    },
+  ];
+
+  const getCellClassName = ({ row }) => {
+    if (row.id === "SUBTOTAL") {
+      return "somme";
+    }
+    return "";
+  };
 
   return (
     <>
@@ -166,11 +207,30 @@ export default function Profit() {
                 </Chart>
               </Paper>
             </Grid>
-            <Grid item xs={12} md={12}>
+            <Grid
+              sx={{
+                "& .somme": {
+                  backgroundColor: lighten(theme.palette.info.main, 0.9),
+                  "&:hover": {
+                    backgroundColor: lighten(theme.palette.info.main, 0.8),
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: lighten(theme.palette.info.main, 0.7),
+                    "&:hover": {
+                      backgroundColor: lighten(theme.palette.info.main, 0.6),
+                    },
+                  },
+                },
+              }}
+              item
+              xs={12}
+              md={12}
+            >
               <DataGrid
                 slots={{ toolbar: CustomToolbar }}
                 rows={rows}
                 columns={columns}
+                getCellClassName={getCellClassName}
                 // onRowClick={handleClick}
               />
             </Grid>

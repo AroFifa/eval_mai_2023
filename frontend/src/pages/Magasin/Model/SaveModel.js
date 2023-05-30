@@ -11,7 +11,6 @@ import MKTypography from "components/MKTypography";
 import DefaultNavbar from "examples/Navbars/DefaultNavbar";
 import magasin_routes from "routes/magasin";
 import SimpleFooter from "examples/Footers/SimpleFooter";
-import MKAlert from "components/MKAlert";
 import MKInput from "components/MKInput";
 import { DataGrid } from "@mui/x-data-grid";
 import { getModel } from "routes/ws_call";
@@ -19,8 +18,12 @@ import { saveModel } from "routes/ws_call";
 import { getCpus } from "routes/ws_call";
 import { getBrands } from "routes/ws_call";
 import FormInput from "own/components/form/FormInput";
+import { Alert, Snackbar } from "@mui/material";
 
 export default function SaveModel() {
+  const [snackbar, setSnackbar] = useState(null);
+  const handleCloseSnackbar = () => setSnackbar(null);
+
   const brand_idRef = useRef({});
   const nameRef = useRef();
   const cpu_idRef = useRef({});
@@ -42,6 +45,7 @@ export default function SaveModel() {
       const cpus = await getCpus();
       setCpuData(cpus);
     } catch (error) {
+      setSnackbar({ children: error, severity: "error" });
       console.error(error);
     }
   };
@@ -57,8 +61,6 @@ export default function SaveModel() {
 
   const title = "Enregistrement d'un Modèle";
 
-  const [error, setError] = useState("");
-
   const save = async (event) => {
     event.preventDefault();
 
@@ -71,10 +73,11 @@ export default function SaveModel() {
       diskRef.current.value
     )
       .then(() => {
+        setSnackbar({ children: "Modèle enregistré", severity: "success" });
         fetchData();
       })
       .catch((e) => {
-        setError(e.message);
+        setSnackbar({ children: e.message, severity: "error" });
       });
   };
 
@@ -196,7 +199,16 @@ export default function SaveModel() {
                     </MKButton>
                   </Grid>
                 </MKBox>
-                <MKBox mb={2}>{error ? <MKAlert color="error">{error}</MKAlert> : <></>}</MKBox>
+                {!!snackbar && (
+                  <Snackbar
+                    open
+                    anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                    onClose={handleCloseSnackbar}
+                    autoHideDuration={6000}
+                  >
+                    <Alert {...snackbar} onClose={handleCloseSnackbar} />
+                  </Snackbar>
+                )}
               </MKBox>
             </Grid>
             <Grid item xs={12} md={8}>

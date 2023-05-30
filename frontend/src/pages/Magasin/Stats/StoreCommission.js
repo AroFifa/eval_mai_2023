@@ -9,7 +9,7 @@ import {
   ValueAxis,
   ZoomAndPan,
 } from "@devexpress/dx-react-chart-material-ui";
-import { Container, Grid, Paper } from "@mui/material";
+import { Container, Grid, Paper, lighten } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import MKBox from "components/MKBox";
 import MKInput from "components/MKInput";
@@ -23,6 +23,7 @@ import CustomToolbar from "./CustomToolbar";
 import { getStoreCommissions } from "routes/ws_call";
 import { getMonths } from "routes/ws_call";
 import FormInput from "own/components/form/FormInput";
+import theme from "assets/theme";
 
 export default function StoreCommission() {
   const [data, setData] = useState([]);
@@ -67,6 +68,17 @@ export default function StoreCommission() {
       field: "year",
       headerName: "Année",
       width: 200,
+      valueGetter: ({ row, value }) => {
+        if (row.id === "SUBTOTAL") {
+          return row.label;
+        }
+        return value;
+      },
+      colSpan: ({ row }) => {
+        if (row.id === "SUBTOTAL") {
+          return 2;
+        }
+      },
     },
     {
       field: "month",
@@ -78,6 +90,7 @@ export default function StoreCommission() {
       headerName: "Vente",
       width: 200,
       renderCell: (params) => {
+        if (params.id === "SUBTOTAL") return format(params.row.sale);
         return format(params.value);
       },
     },
@@ -86,13 +99,14 @@ export default function StoreCommission() {
       headerName: "Commission",
       width: 200,
       renderCell: (params) => {
+        if (params.id === "SUBTOTAL") return format(params.row.commission);
         return format(params.value);
       },
     },
 
     { field: "store_name", headerName: "Point de vente", width: 200 },
   ];
-  const rows = data.map((item) => ({
+  var rows = data.map((item) => ({
     id: item.id,
     store_name: item.store.store_name,
     month: item.month.month_name,
@@ -113,6 +127,16 @@ export default function StoreCommission() {
       label: "month_name",
       value: "id",
     },
+  };
+  const sumCommission = data.reduce((total, item) => total + item.commission, 0);
+  const sumSale = data.reduce((total, item) => total + item.sale, 0);
+  rows = [...rows, { id: "SUBTOTAL", label: "Somme", sale: sumSale, commission: sumCommission }];
+
+  const getCellClassName = ({ row }) => {
+    if (row.id === "SUBTOTAL") {
+      return "somme";
+    }
+    return "";
   };
 
   return (
@@ -139,11 +163,41 @@ export default function StoreCommission() {
             </Grid>
           </Grid>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={12}>
+            <Grid
+              sx={{
+                "& .somme": {
+                  backgroundColor: lighten(theme.palette.info.main, 0.9),
+                  "&:hover": {
+                    backgroundColor: lighten(theme.palette.info.main, 0.8),
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: lighten(theme.palette.info.main, 0.7),
+                    "&:hover": {
+                      backgroundColor: lighten(theme.palette.info.main, 0.6),
+                    },
+                  },
+                },
+              }}
+              item
+              xs={12}
+              md={12}
+            >
               <DataGrid
                 slots={{ toolbar: CustomToolbar }}
                 rows={rows}
                 columns={columns}
+                hideFooter={rows.length > 100 ? false : true}
+                initialState={
+                  rows.length > 100
+                    ? {
+                        // Set initialState only when rows.length <= 100
+                        pagination: {
+                          paginationModel: { page: 0, pageSize: 20 },
+                        },
+                      }
+                    : undefined
+                }
+                getCellClassName={getCellClassName}
                 // onRowClick={handleClick}
               />
             </Grid>

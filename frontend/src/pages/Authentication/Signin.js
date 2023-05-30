@@ -15,11 +15,12 @@ import bgImage from "assets/images/bg-sign-in-basic.jpeg";
 import { useRef } from "react";
 import { signIn } from "routes/ws_call";
 import { useState } from "react";
-import MKAlert from "components/MKAlert";
 import { useNavigate } from "react-router-dom";
+import { Alert, Snackbar } from "@mui/material";
 
 export default function Signin() {
-  const [error, setError] = useState("");
+  const [snackbar, setSnackbar] = useState(null);
+  const handleCloseSnackbar = () => setSnackbar(null);
 
   const navigate = useNavigate();
   const email = useRef();
@@ -35,7 +36,7 @@ export default function Signin() {
       if (data.store.category.category_level === 0) navigate("/magasin");
       else if (data.store.category.category_level === 10) navigate("/salespoint");
     } catch (error) {
-      setError(error.message);
+      setSnackbar({ children: error.message, severity: "error" });
     }
   };
 
@@ -98,7 +99,16 @@ export default function Signin() {
                         se connecter
                       </MKButton>
                     </MKBox>
-                    <MKBox mb={2}>{error ? <MKAlert color="error">{error}</MKAlert> : <></>}</MKBox>
+                    {!!snackbar && (
+                      <Snackbar
+                        open
+                        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                        onClose={handleCloseSnackbar}
+                        autoHideDuration={6000}
+                      >
+                        <Alert {...snackbar} onClose={handleCloseSnackbar} />
+                      </Snackbar>
+                    )}
                   </MKBox>
                 </form>
               </MKBox>
