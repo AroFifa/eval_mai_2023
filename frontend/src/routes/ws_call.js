@@ -303,9 +303,9 @@ export const updateLaptop = async (id, prix, model_id) => {
   return data.data.content;
 };
 
-export const searchLaptop = async (q) => {
+export const searchLaptop = async (q, page, pageSize) => {
   const response = await responseInit(
-    `http://localhost:8080/laptops/search?q=${q ? q : ""}`,
+    `http://localhost:8080/laptops/search?q=${q ? q : ""}&page=${page}&size=${pageSize}`,
     "GET",
     null
   );
@@ -316,7 +316,7 @@ export const searchLaptop = async (q) => {
     throw new Error(data.message);
   }
 
-  return data.data.content;
+  return data.data;
 };
 
 export const searchEmployees = async (q) => {

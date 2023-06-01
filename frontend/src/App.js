@@ -38,6 +38,8 @@ import Reception from "pages/Magasin/Salespoint/Reception";
 import CustomPaginationGrid from "pages/Datagrid/CustomPagination";
 import CustomDataGrid from "pages/Datagrid/CustomDatagrid";
 import SalesDetails from "pages/Magasin/Salespoint/SalesDetails";
+import Template from "own/Template";
+import UploadImg from "pages/UploadImg/UploadImg";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -76,6 +78,9 @@ export default function App() {
 
         <Route path="/presentation" element={<Presentation />} />
         <Route path="/index" element={<CustomDataGrid />} />
+        <Route path="/template" element={<Template />} />
+        <Route path="/img" element={<UploadImg />} />
+
         <Route path="/magasin/laptops/:id" element={<UpdateLaptop />} />
         <Route path="/magasin/sales/:year/:month" element={<SalesDetails />} />
         <Route path="/datagrid/custompagination" element={<CustomPaginationGrid />} />

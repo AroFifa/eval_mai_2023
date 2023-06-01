@@ -17,28 +17,29 @@ export default function ListLaptop() {
   const q = useRef();
 
   const [laptops, setLaptops] = useState([]);
-  const fetchData = async () => {
+
+  // Pagination
+  const [rowCount, setRowCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+
+  const fetchData = async (page, pageSize) => {
     try {
-      const data = await searchLaptop(q.current.value);
-      setLaptops(data);
+      const data = await searchLaptop(q.current.value, page, pageSize);
+      setLaptops(data.content);
+      console.log(data.content);
+      setRowCount(data.totalElements);
     } catch (error) {
       console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(page, pageSize);
   }, []);
 
   function handleSearch() {
-    searchLaptop(q.current.value)
-      .then((data) => {
-        setLaptops(data);
-      })
-      .catch((error) => {
-        // Handle any potential errors from the Promise
-        console.error(error);
-      });
+    fetchData(page, pageSize);
   }
 
   const handleClick = (
@@ -59,15 +60,7 @@ export default function ListLaptop() {
       headerName: "Marque",
       // valueGetter: (params) => `${params.row.model?.brand.brand_name || ""}`,
       valueGetter: ({ row }) => {
-        if (row.id === "SUBTOTAL") {
-          return row.label;
-        }
         return row.model?.brand.brand_name || "";
-      },
-      colSpan: ({ row }) => {
-        if (row.id === "SUBTOTAL") {
-          return 5;
-        }
       },
     },
     {
@@ -99,12 +92,6 @@ export default function ListLaptop() {
       field: "sales_price",
       headerName: "Prix",
       width: 200,
-      valueGetter: ({ row, value }) => {
-        if (row.id === "SUBTOTAL") {
-          return `${row.subtotal}`;
-        }
-        return value;
-      },
     },
     {
       field: "Update Link",
@@ -119,7 +106,12 @@ export default function ListLaptop() {
     },
   ];
 
-  const rows = [...laptops, { id: "SUBTOTAL", label: "Subtotal", subtotal: 624 }];
+  const handlePageChange = (params) => {
+    setPage(params.page);
+    setPageSize(params.pageSize);
+    fetchData(params.page, params.pageSize);
+  };
+
   return (
     <>
       <DefaultNavbar routes={magasin_routes} brand={"Magasin centrale"} sticky />
@@ -144,15 +136,36 @@ export default function ListLaptop() {
           </form>
         </Grid>
         <Grid container item xs={12} lg={7} sx={{ mx: "auto" }}>
-          <DataGrid
-            rows={rows}
+          {/* <DataGrid
+            rows={laptops}
             columns={columns}
             initialState={{
               pagination: {
                 paginationModel: { page: 0, pageSize: 20 },
               },
             }}
-            pageSizeOptions={[5, 10]}
+            pageSizeOptions={[5, 10, 20]}
+            localeText={{
+              MuiTablePagination: {
+                labelDisplayedRows: ({ from, to, count }) => `${from} - ${to} pour ${count}`,
+                labelRowsPerPage: `Lignes:`,
+              },
+            }}
+            // onRowClick={handleClick}
+          /> */}
+
+          <DataGrid
+            rows={laptops}
+            columns={columns}
+            initialState={{
+              pagination: {
+                paginationModel: { page: page, pageSize: pageSize },
+              },
+            }}
+            paginationMode="server"
+            onPaginationModelChange={handlePageChange}
+            pageSizeOptions={[5, 10, 20, 100]}
+            rowCount={rowCount}
             localeText={{
               MuiTablePagination: {
                 labelDisplayedRows: ({ from, to, count }) => `${from} - ${to} pour ${count}`,
