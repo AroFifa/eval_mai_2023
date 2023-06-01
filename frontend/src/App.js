@@ -37,6 +37,7 @@ import UpdateSalespoint from "pages/Magasin/Salespoint/Update";
 import Reception from "pages/Magasin/Salespoint/Reception";
 import CustomPaginationGrid from "pages/Datagrid/CustomPagination";
 import CustomDataGrid from "pages/Datagrid/CustomDatagrid";
+import SalesDetails from "pages/Magasin/Salespoint/SalesDetails";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="/presentation" element={<Presentation />} />
         <Route path="/index" element={<CustomDataGrid />} />
         <Route path="/magasin/laptops/:id" element={<UpdateLaptop />} />
+        <Route path="/magasin/sales/:year/:month" element={<SalesDetails />} />
         <Route path="/datagrid/custompagination" element={<CustomPaginationGrid />} />
         <Route path="/magasin/salespoint/:id" element={<UpdateSalespoint />} />
       </Routes>

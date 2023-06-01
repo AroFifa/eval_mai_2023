@@ -632,6 +632,18 @@ export const getSales = async (model_name, minPrice, maxPrice) => {
   return data.data.content;
 };
 
+export const findSales = async (year, month) => {
+  const response = await responseInit(`http://localhost:8080/sales/${year}/${month}`, "GET", null);
+
+  const data = await response.json();
+
+  if (data.error) {
+    throw new Error(data.message);
+  }
+
+  return data.data.content;
+};
+
 export const getModel = async (model_name) => {
   var dataToSend = JSON.stringify({
     model_name: model_name,

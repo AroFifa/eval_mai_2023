@@ -25,6 +25,7 @@ import { getStoreCommissions } from "routes/ws_call";
 import { getMonths } from "routes/ws_call";
 import FormInput from "own/components/form/FormInput";
 import theme from "assets/theme";
+import { useNavigate } from "react-router-dom";
 
 export default function StoreCommission() {
   const [data, setData] = useState([]);
@@ -64,6 +65,17 @@ export default function StoreCommission() {
   function handleChange() {
     fetchData();
   }
+  const navigate = useNavigate();
+
+  const handleClick = (event) => {
+    event.preventDefault();
+
+    navigate(
+      `/magasin/sales/${yearRef.current.value ? yearRef.current.value : "all"}/${
+        monthRef.current.value ? monthRef.current.value : "all"
+      }`
+    );
+  };
   const columns = [
     {
       field: "year",
@@ -91,7 +103,13 @@ export default function StoreCommission() {
       headerName: "Vente",
       width: 200,
       renderCell: (params) => {
-        if (params.id === "SUBTOTAL") return format(params.row.sale);
+        if (params.id === "SUBTOTAL")
+          return (
+            <a href="" onClick={(event) => handleClick(event)}>
+              {" "}
+              {format(params.row.sale)}{" "}
+            </a>
+          );
         return format(params.value);
       },
     },
