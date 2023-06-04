@@ -37,6 +37,9 @@ export default function Signin() {
       else if (data.store.category.category_level === 10) navigate("/salespoint");
     } catch (error) {
       setSnackbar({ children: error.message, severity: "error" });
+    } finally {
+      // loaded
+      console.log("loaded");
     }
   };
 

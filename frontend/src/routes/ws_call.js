@@ -1,59 +1,47 @@
-const responseInit = async (url, method, authorization, body, contentType = "application/json") => {
+const responseInit = async (
+  url,
+  method,
+  authorization = null,
+  body = undefined,
+  contentType = "application/json"
+) => {
   const content = {
     method: method,
     headers: {
       "Content-Type": contentType,
-      Authorization: "",
+      Authorization: authorization || "",
     },
     body: body !== undefined ? body : undefined,
   };
-
-  if (authorization !== undefined && authorization !== null) {
-    content.headers.Authorization = authorization;
-  }
 
   const response = await fetch(url, content);
 
   return response;
 };
 
-export const fetchData = async (url, method, authorization, body) => {
-  const response = await responseInit(url, method, authorization, body);
+export const apiCall = async (
+  url,
+  method,
+  authorization = null,
+  body = undefined,
+  contentType = "application/json"
+) => {
+  try {
+    const response = await responseInit(url, method, authorization, body, contentType);
+    const data = await response.json();
 
-  console.log(response);
-
-  if (response.status === 400) {
-    throw new Error("Error");
+    if (data.error) {
+      throw new Error(data.message);
+    }
+    return data;
+  } catch (err) {
+    throw new Error(err.message);
   }
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.message);
-  }
-
-  return data.data;
 };
 
 export const signIn = async (email, pwd) => {
-  var dataToSend = JSON.stringify({
-    email: email,
-    passwd: pwd,
-  });
-  // dataToSend = JSON.parse(dataToSend);
-
-  const response = await responseInit(
-    "http://localhost:8080/employees/signin",
-    "POST",
-    null,
-    dataToSend
-  );
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.message);
-  }
+  const dataToSend = JSON.stringify({ email, passwd: pwd });
+  const data = await apiCall("http://localhost:8080/employees/signin", "POST", null, dataToSend);
 
   return data.data;
 };
@@ -79,36 +67,18 @@ export const signOut = async () => {
 };
 
 export const getBrands = async () => {
-  const response = await responseInit("http://localhost:8080/brands", "GET", null);
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.message);
-  }
+  const data = await apiCall("http://localhost:8080/brands", "GET");
 
   return data.data.content;
 };
 
 export const getImageEntities = async () => {
-  const response = await responseInit("http://localhost:8080/images", "GET", null);
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.message);
-  }
+  const data = await apiCall("http://localhost:8080/images", "GET");
 
   return data.data.content;
 };
 export const getCpus = async () => {
-  const response = await responseInit("http://localhost:8080/cpus", "GET", null);
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.message);
-  }
+  const data = await apiCall("http://localhost:8080/cpus", "GET");
 
   return data.data.content;
 };
