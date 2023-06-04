@@ -23,34 +23,56 @@ import routes from "routes/routes";
 export default function UploadImg() {
   const email = useRef([]);
   const passwd = useRef();
+  const [result, setResult] = useState();
 
-  const [img, setImg] = useState(null);
+  const [img, setImg] = useState();
+  const [imageDisplay, setImageDisplay] = useState(null);
   function handleImgChange(event) {
-    setImg(URL.createObjectURL(event.target.files[0]));
+    const file = event.target.files[0];
+    setImg(file);
+    setImageDisplay(file ? URL.createObjectURL(file) : null);
   }
-  const save = async (event) => {
+  // const save = async (event) => {
+  //   event.preventDefault();
+
+  //   const formData = new FormData();
+
+  //   formData.append("email", email.current.value);
+  //   formData.append("passwd", passwd.current.value);
+  //   formData.append("image", img);
+
+  //   // for (const [key, value] of formData.entries()) {
+  //   //   console.log(`${key}: ${value}`);
+  //   // }
+
+  //   try {
+  //     const response = await fetch("http://localhost:8080/img/upload", {
+  //       method: "POST",
+  //       body: formData,
+  //     });
+  //     const data = await response.json();
+  //     setResult("http://localhost:8080/images/" + data.data);
+  //     console.log(data);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
+
+  const saveImg = async (event) => {
     event.preventDefault();
-
-    // console.log(img);
-    // console.log(email.current.value);
-    // console.log(passwd.current.value);
-
     const formData = new FormData();
 
-    formData.append("email", email.current.value);
-    formData.append("passwd", passwd.current.value);
-    formData.append("image", img);
+    formData.append("img", img);
 
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
     try {
-      const response = await fetch("http://localhost:8080/img/upload", {
+      const response = await fetch("http://localhost:8080/images/save", {
         method: "POST",
         body: formData,
       });
       const data = await response.json();
-      console.log(data);
+
+      setResult(`data:image/octet-stream;base64, ${data.data.imageDisplay}`);
+      console.log(result);
     } catch (error) {
       console.error(error);
     }
@@ -61,9 +83,18 @@ export default function UploadImg() {
       <MKBox minHeight="120px" marginTop="50px"></MKBox>
       <Container>
         <Grid>
-          <MKBox component="form" encType="multipart/form-data" onSubmit={save} autoComplete="off">
+          <img src={result ? result : bgImage} height={"45vh"} width={"45vh"} />
+          <MKBox
+            component="form"
+            encType="multipart/form-data"
+            onSubmit={saveImg}
+            autoComplete="off"
+          >
             <Card>
-              <CardMedia sx={{ height: "45vh", width: "45vh" }} image={img ? img : bgImage} />
+              <CardMedia
+                sx={{ height: "45vh", width: "45vh" }}
+                image={imageDisplay ? imageDisplay : bgImage}
+              />
 
               <CardContent>
                 <Typography gutterBottom variant="h5" component="div">

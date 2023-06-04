@@ -554,3 +554,11 @@ on s.laptop_id =  l.id;
 SELECT s.id store_id,m.month_number "month", COALESCE(total_price, 0)
             FROM store s
             CROSS JOIN month m left join getStoreMonthSales(null, null) v ON s.id = v.store_id and m.month_number = v."month"
+
+
+-- Image entity
+
+            CREATE TABLE ImageEntity (
+              id serial primary key,
+              img text
+            );
